@@ -228,6 +228,121 @@
     border-top: 1px dashed var(--border);
     padding-top: 1rem;
   }
+
+  /* ================================================
+     [ENHANCED] Dynamic Effects & Visual Polish
+     ================================================ */
+
+  /* -- Page Transition -- */
+  html {
+    animation: pageReveal 0.5s ease-out;
+  }
+  @keyframes pageReveal {
+    from { opacity: 0; filter: brightness(1.6) blur(1px); }
+    to   { opacity: 1; filter: brightness(1) blur(0); }
+  }
+
+  /* -- Mouse Follow Glow -- */
+  #mouse-glow {
+    position: fixed;
+    pointer-events: none;
+    z-index: 98;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,169,110,0.07) 0%, rgba(201,169,110,0.02) 40%, transparent 70%);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    will-change: left, top, opacity;
+  }
+
+  /* -- CRT Noise Overlay -- */
+  #crt-noise {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 97;
+    opacity: 0.03;
+    animation: crtNoiseFlicker 6s infinite;
+  }
+  @keyframes crtNoiseFlicker {
+    0%, 100% { opacity: 0.02; }
+    3%  { opacity: 0.05; }
+    6%  { opacity: 0.02; }
+    50% { opacity: 0.035; }
+    53% { opacity: 0.02; }
+  }
+
+  /* -- Click Ripple -- */
+  .click-ripple {
+    position: fixed;
+    pointer-events: none;
+    z-index: 151;
+    border: 1px solid rgba(201,169,110,0.35);
+    border-radius: 50%;
+    animation: rippleExpand 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+  @keyframes rippleExpand {
+    from { width: 0; height: 0; opacity: 0.6; }
+    to   { width: 130px; height: 130px; opacity: 0; margin-left: -65px; margin-top: -65px; }
+  }
+
+  /* -- Title / Heading Hover Pulse -- */
+  h1:hover, h2:hover, .motto:hover, .call-sign:hover, .plaque h1:hover,
+  .domain:hover, .brand:hover, .logo:hover {
+    animation: titlePulse 0.9s ease-in-out;
+  }
+  @keyframes titlePulse {
+    0%, 100% { text-shadow: 0 0 6px #c9a96e; }
+    50%      { text-shadow: 0 0 22px #c9a96e, 0 0 45px #c9a96e; }
+  }
+
+  /* -- Card Lift + Border Glow on Hover -- */
+  .project-card, .repo-card, .poem, .panel, .terminal, .log-entry {
+    transition: transform 0.3s cubic-bezier(0.33, 1, 0.68, 1),
+                box-shadow 0.3s cubic-bezier(0.33, 1, 0.68, 1),
+                border-color 0.3s ease;
+  }
+  .project-card:hover, .repo-card:hover, .poem:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(201,169,110,0.14);
+    border-color: rgba(201,169,110,0.4);
+  }
+  .panel:hover, .terminal:hover {
+    box-shadow: 0 4px 20px rgba(201,169,110,0.08);
+  }
+
+  /* -- Unified Interactive Transition -- */
+  a, button, .action-btn, .diag-btn, .decode-btn, .bai-btn, .band-btn,
+  .send-btn, .btn-sm, .project-card, .repo-card, .tag, input, textarea {
+    transition: color 0.25s ease, background 0.25s ease,
+                border-color 0.25s ease, box-shadow 0.25s ease,
+                transform 0.2s ease, opacity 0.25s ease;
+  }
+
+  /* -- Footer Breathing Light -- */
+  .footer, .back-link, .status-bar {
+    animation: footerBreathe 4.5s ease-in-out infinite;
+  }
+  @keyframes footerBreathe {
+    0%, 100% { opacity: 0.6; }
+    50%      { opacity: 1; }
+  }
+
+  /* -- Enhanced Scanline Animation -- */
+  @keyframes scanlineJitter {
+    0%, 100% { opacity: 1; transform: translateY(0); }
+    1%  { opacity: 0.82; }
+    2%  { opacity: 1; }
+    50% { opacity: 0.94; }
+    52% { opacity: 1; }
+    97% { opacity: 0.88; }
+    98% { opacity: 1; }
+  }
+  body::before {
+    animation: scanlineJitter 8s infinite;
+  }
+
 </style>
 </head>
 <body>
@@ -440,5 +555,95 @@
 </div>
 
 </div>
+<script>
+/* ================================================
+   [ENHANCED] Dynamic Effects — Mouse Glow, Ripple, Noise
+   ================================================ */
+(function() {
+  /* -- Mouse Glow -- */
+  var glow = document.createElement('div');
+  glow.id = 'mouse-glow';
+  document.body.appendChild(glow);
+
+  var glowTimer = null;
+  document.addEventListener('mousemove', function(e) {
+    glow.style.left = e.clientX + 'px';
+    glow.style.top = e.clientY + 'px';
+    glow.style.opacity = '1';
+    clearTimeout(glowTimer);
+    glowTimer = setTimeout(function() { glow.style.opacity = '0'; }, 1800);
+  });
+  document.addEventListener('mouseleave', function() { glow.style.opacity = '0'; });
+
+  /* -- CRT Noise Overlay -- */
+  var noise = document.createElement('div');
+  noise.id = 'crt-noise';
+  (function() {
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180">' +
+      '<filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/>' +
+      '</filter><rect width="100%" height="100%" filter="url(#n)" opacity="0.5"/></svg>';
+    noise.style.backgroundImage = 'url(data:image/svg+xml,' + encodeURIComponent(svg) + ')';
+    noise.style.backgroundSize = '120px 120px';
+  })();
+  document.body.appendChild(noise);
+
+  /* -- Click Ripple -- */
+  document.addEventListener('click', function(e) {
+    var ripple = document.createElement('div');
+    ripple.className = 'click-ripple';
+    ripple.style.left = e.clientX + 'px';
+    ripple.style.top = e.clientY + 'px';
+    document.body.appendChild(ripple);
+    setTimeout(function() { ripple.remove(); }, 750);
+  });
+})();
+
+  /* -- Floating Particles Canvas -- */
+  (function() {
+    var pc = document.createElement('canvas');
+    pc.id = 'particle-canvas';
+    pc.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;';
+    document.body.insertBefore(pc, document.body.firstChild);
+    var pctx = pc.getContext('2d');
+    var parts = [];
+    function resizep() { pc.width = window.innerWidth; pc.height = window.innerHeight; }
+    resizep();
+    window.addEventListener('resize', function() { resizep(); rebuildParts(); });
+    function rebuildParts() {
+      parts = [];
+      var cnt = Math.min(Math.floor(pc.width * pc.height / 14000), 120);
+      for (var i = 0; i < cnt; i++) {
+        parts.push({
+          x: Math.random() * pc.width, y: Math.random() * pc.height,
+          vx: (Math.random() - 0.5) * 0.25, vy: (Math.random() - 0.5) * 0.25,
+          sz: Math.random() * 1.4 + 0.3, a: Math.random() * 0.35 + 0.04,
+          fd: Math.random() > 0.5 ? 1 : -1
+        });
+      }
+    }
+    rebuildParts();
+    function particleLoop() {
+      pctx.clearRect(0, 0, pc.width, pc.height);
+      for (var i = 0; i < parts.length; i++) {
+        var p = parts[i];
+        p.x += p.vx; p.y += p.vy;
+        p.a += p.fd * 0.0025;
+        if (p.a > 0.4) p.fd = -1;
+        if (p.a < 0.03) p.fd = 1;
+        if (p.x < -10) p.x = pc.width + 10;
+        if (p.x > pc.width + 10) p.x = -10;
+        if (p.y < -10) p.y = pc.height + 10;
+        if (p.y > pc.height + 10) p.y = -10;
+        pctx.beginPath();
+        pctx.arc(p.x, p.y, p.sz, 0, Math.PI * 2);
+        pctx.fillStyle = 'rgba(201,169,110,' + p.a + ')';
+        pctx.fill();
+      }
+      requestAnimationFrame(particleLoop);
+    }
+    particleLoop();
+  })();
+
+</script>
 </body>
 </html>
