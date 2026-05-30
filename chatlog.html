@@ -343,7 +343,63 @@
     animation: scanlineJitter 8s infinite;
   }
 
+
+  /* ================================================
+     [NEW] 3D Card Tilt + Audio Button + Three Canvas
+     ================================================ */
+
+  /* -- Three.js Canvas Container -- */
+  #three-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* -- 3D Card Tilt -- */
+  .project-card, .repo-card, .poem, .panel, .crt-frame, .msg, .log-entry {
+    transform-style: preserve-3d;
+    perspective: 800px;
+  }
+
+  /* -- Audio Toggle Button -- */
+  #audio-toggle {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 300;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid rgba(201,169,110,0.18);
+    background: rgba(0,0,0,0.55);
+    color: rgba(201,169,110,0.45);
+    cursor: pointer;
+    font-size: 17px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.4s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  #audio-toggle:hover {
+    border-color: rgba(201,169,110,0.5);
+    color: rgba(201,169,110,0.8);
+    box-shadow: 0 0 16px rgba(201,169,110,0.2);
+  }
+  #audio-toggle.playing {
+    opacity: 0.22;
+    border-color: rgba(201,169,110,0.3);
+  }
+  #audio-toggle.playing:hover {
+    opacity: 0.65;
+  }
+
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
@@ -642,6 +698,266 @@
       requestAnimationFrame(particleLoop);
     }
     particleLoop();
+  })();
+
+</script>
+<script>
+
+  /* -- Lo-Fi Ambient Audio -- */
+  (function() {
+    var audioCtx = null;
+    var masterGain = null;
+    var droneOsc = null;
+    var droneGain = null;
+    var isPlaying = false;
+    var noteTimer = null;
+    var pentatonic = [130.81, 146.83, 164.81, 196, 220, 261.63, 293.66, 329.63, 392, 440];
+
+    function initAudio() {
+      if (audioCtx) return;
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      } catch(e) { return; }
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0.06;
+      masterGain.connect(audioCtx.destination);
+
+      droneOsc = audioCtx.createOscillator();
+      droneOsc.type = 'sine';
+      droneOsc.frequency.value = 55;
+      droneGain = audioCtx.createGain();
+      droneGain.gain.value = 0.12;
+      droneOsc.connect(droneGain);
+      droneGain.connect(masterGain);
+      droneOsc.start();
+
+      // Subtle harmonic drone
+      var harmOsc = audioCtx.createOscillator();
+      harmOsc.type = 'sine';
+      harmOsc.frequency.value = 82.5;
+      var harmGain = audioCtx.createGain();
+      harmGain.gain.value = 0.05;
+      harmOsc.connect(harmGain);
+      harmGain.connect(masterGain);
+      harmOsc.start();
+
+      isPlaying = true;
+      scheduleNote();
+    }
+
+    function scheduleNote() {
+      if (!isPlaying) return;
+      var delay = 3000 + Math.random() * 6000;
+      noteTimer = setTimeout(function() {
+        if (!isPlaying || !audioCtx) return;
+        try {
+          var freq = pentatonic[Math.floor(Math.random() * pentatonic.length)];
+          var osc = audioCtx.createOscillator();
+          osc.type = 'sine';
+          osc.frequency.value = freq * 0.5;
+          var g = audioCtx.createGain();
+          g.gain.setValueAtTime(0, audioCtx.currentTime);
+          g.gain.linearRampToValueAtTime(0.035, audioCtx.currentTime + 0.4);
+          g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2.8);
+          osc.connect(g);
+          g.connect(masterGain);
+          osc.start(audioCtx.currentTime);
+          osc.stop(audioCtx.currentTime + 2.9);
+        } catch(e) {}
+        scheduleNote();
+      }, delay);
+    }
+
+    function stopAudio() {
+      isPlaying = false;
+      clearTimeout(noteTimer);
+      try {
+        if (droneOsc) { droneOsc.stop(); droneOsc.disconnect(); droneOsc = null; }
+      } catch(e) {}
+      try {
+        if (audioCtx && audioCtx.state !== 'closed') audioCtx.close();
+      } catch(e) {}
+      audioCtx = null;
+    }
+
+    var btn = document.createElement('button');
+    btn.id = 'audio-toggle';
+    btn.innerHTML = '&#9835;';
+    btn.title = 'Ambient sound';
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      if (!audioCtx || audioCtx.state === 'closed') {
+        initAudio();
+        btn.classList.add('playing');
+      } else if (isPlaying) {
+        stopAudio();
+        btn.classList.remove('playing');
+        btn.style.opacity = '0';
+      }
+    });
+    btn.addEventListener('mouseenter', function() { btn.style.opacity = '1'; });
+    btn.addEventListener('mouseleave', function() {
+      if (!isPlaying) btn.style.opacity = '0';
+      else btn.style.opacity = '0.22';
+    });
+    document.body.appendChild(btn);
+
+    // Auto-start on first user interaction
+    var autoStarted = false;
+    document.addEventListener('click', function autoStart() {
+      if (autoStarted) return;
+      autoStarted = true;
+      initAudio();
+      btn.classList.add('playing');
+    }, {once: true});
+    document.addEventListener('touchstart', function autoStart() {
+      if (autoStarted) return;
+      autoStarted = true;
+      initAudio();
+      btn.classList.add('playing');
+    }, {once: true});
+  })();
+
+
+  /* -- Three.js 3D Particle Sphere -- */
+  (function() {
+    if (typeof THREE === 'undefined') return;
+
+    var container = document.createElement('div');
+    container.id = 'three-canvas';
+    document.body.insertBefore(container, document.body.firstChild);
+
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.z = 5;
+
+    var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0);
+    container.appendChild(renderer.domElement);
+
+    var group = new THREE.Group();
+    scene.add(group);
+
+    var colorHex = 0xc9a96e;
+
+    // Icosahedron wireframe
+    var icoGeo = new THREE.IcosahedronGeometry(1.8, 2);
+    var edgesGeo = new THREE.EdgesGeometry(icoGeo);
+    var wireframe = new THREE.LineSegments(
+      edgesGeo,
+      new THREE.LineBasicMaterial({ color: colorHex, transparent: true, opacity: 0.09 })
+    );
+    group.add(wireframe);
+
+    // Surface dots on icosahedron
+    var dotsGeo = new THREE.IcosahedronGeometry(1.8, 3);
+    var dotsPositions = dotsGeo.attributes.position.array;
+    var sampled = [];
+    for (var i = 0; i < dotsPositions.length; i += 6) {
+      sampled.push(dotsPositions[i], dotsPositions[i+1], dotsPositions[i+2]);
+    }
+    var ptsGeo = new THREE.BufferGeometry();
+    ptsGeo.setAttribute('position', new THREE.Float32BufferAttribute(sampled, 3));
+    var ptsMat = new THREE.PointsMaterial({ color: colorHex, size: 0.025, transparent: true, opacity: 0.22 });
+    var surfacePts = new THREE.Points(ptsGeo, ptsMat);
+    group.add(surfacePts);
+
+    // Floating ambient particles around sphere
+    var floatCount = 80;
+    var floatPositions = new Float32Array(floatCount * 3);
+    var floatData = [];
+    for (var j = 0; j < floatCount; j++) {
+      var theta = Math.random() * Math.PI * 2;
+      var phi = Math.acos(2 * Math.random() - 1);
+      var r = 1.8 + Math.random() * 1.2;
+      floatPositions[j*3] = r * Math.sin(phi) * Math.cos(theta);
+      floatPositions[j*3+1] = r * Math.sin(phi) * Math.sin(theta);
+      floatPositions[j*3+2] = r * Math.cos(phi);
+      floatData.push({
+        baseX: floatPositions[j*3],
+        baseY: floatPositions[j*3+1],
+        baseZ: floatPositions[j*3+2],
+        speed: 0.0005 + Math.random() * 0.002,
+        phase: Math.random() * Math.PI * 2,
+        amp: 0.1 + Math.random() * 0.3
+      });
+    }
+    var floatGeo = new THREE.BufferGeometry();
+    floatGeo.setAttribute('position', new THREE.Float32BufferAttribute(floatPositions, 3));
+    var floatPts = new THREE.Points(
+      floatGeo,
+      new THREE.PointsMaterial({ color: colorHex, size: 0.018, transparent: true, opacity: 0.13 })
+    );
+    group.add(floatPts);
+
+    // Second subtle ring
+    var ringGeo = new THREE.TorusGeometry(2.1, 0.015, 16, 80);
+    var ring = new THREE.Mesh(
+      ringGeo,
+      new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.06 })
+    );
+    ring.rotation.x = Math.PI / 3;
+    group.add(ring);
+
+    var time = 0;
+    function animate() {
+      requestAnimationFrame(animate);
+      time += 0.003;
+      group.rotation.x += 0.0008;
+      group.rotation.y += 0.0012;
+
+      // Animate floating particles
+      var posArray = floatPts.geometry.attributes.position.array;
+      for (var k = 0; k < floatData.length; k++) {
+        var fd = floatData[k];
+        posArray[k*3] = fd.baseX + Math.sin(time * 3 + fd.phase) * fd.amp;
+        posArray[k*3+1] = fd.baseY + Math.cos(time * 2.5 + fd.phase) * fd.amp;
+        posArray[k*3+2] = fd.baseZ + Math.sin(time * 2 + fd.phase + 1) * fd.amp;
+      }
+      floatPts.geometry.attributes.position.needsUpdate = true;
+
+      ring.rotation.z += 0.001;
+
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', function() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+  })();
+
+
+  /* -- 3D Card Tilt Effect -- */
+  (function() {
+    var cards = document.querySelectorAll('.project-card, .repo-card, .poem, .panel, .crt-frame, .msg, .log-entry');
+    if (cards.length === 0) return;
+
+    cards.forEach(function(card) {
+      card.addEventListener('mouseenter', function() {
+        card.style.transition = 'transform 0.1s ease-out, box-shadow 0.1s ease-out';
+      });
+      card.addEventListener('mousemove', function(e) {
+        var rect = card.getBoundingClientRect();
+        var x = e.clientX - rect.left;
+        var y = e.clientY - rect.top;
+        var cx = rect.width / 2;
+        var cy = rect.height / 2;
+        var rx = ((y - cy) / cy) * -5;
+        var ry = ((x - cx) / cx) * 5;
+        card.style.transform = 'perspective(600px) rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) translateY(-2px)';
+      });
+      card.addEventListener('mouseleave', function() {
+        card.style.transition = 'transform 0.5s cubic-bezier(0.33, 1, 0.68, 1), box-shadow 0.5s cubic-bezier(0.33, 1, 0.68, 1)';
+        card.style.transform = 'perspective(600px) rotateX(0) rotateY(0) translateY(0)';
+      });
+    });
   })();
 
 </script>
