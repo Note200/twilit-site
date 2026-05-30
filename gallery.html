@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>重返未来：1999 官方壁纸廊 — twilit</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@300;400&family=Noto+Serif+SC:wght@300;400;600&display=swap');
+
+  :root {
+    --bg: #080b10;
+    --amber: #c9a96e;
+    --amber-dim: #7a6543;
+    --amber-glow: rgba(201,169,110,0.15);
+    --text: #b8b4a8;
+    --text-dim: #6b6760;
+    --card-bg: #0d1119;
+    --border: rgba(201,169,110,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Serif SC', serif;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* CRT scanlines */
+  body::before {
+    content: '';
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(201,169,110,0.03) 2px, rgba(201,169,110,0.03) 4px
+    );
+    pointer-events: none; z-index: 100;
+  }
+
+  /* Vignette */
+  body::after {
+    content: '';
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(8,11,16,0.85) 100%);
+    pointer-events: none; z-index: 99;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    position: fixed;
+    width: 20px; height: 20px;
+    border: 1px solid var(--amber-dim);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    mix-blend-mode: difference;
+    transition: transform 0.15s ease, border-color 0.3s;
+    transform: translate(-50%, -50%);
+  }
+  .cursor.hover { transform: translate(-50%, -50%) scale(1.8); border-color: var(--amber); }
+
+  /* Container */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Back nav */
+  .back-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--amber-dim);
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.8rem;
+    text-decoration: none;
+    letter-spacing: 0.08em;
+    margin-bottom: 2rem;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid transparent;
+    transition: all 0.3s;
+  }
+  .back-nav:hover { color: var(--amber); border-color: var(--amber-dim); }
+
+  /* Header */
+  .gallery-header {
+    text-align: center;
+    margin-bottom: 3.5rem;
+  }
+  .gallery-header h1 {
+    font-size: 2.4rem;
+    font-weight: 300;
+    color: var(--amber);
+    letter-spacing: 0.06em;
+    margin-bottom: 0.5rem;
+  }
+  .gallery-header .subtitle {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.78rem;
+    color: var(--amber-dim);
+    letter-spacing: 0.12em;
+  }
+  .gallery-header .divider {
+    width: 60px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--amber-dim), transparent);
+    margin: 1.2rem auto 0;
+  }
+
+  /* Version section */
+  .version-section {
+    margin-bottom: 3.5rem;
+  }
+  .version-label {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.82rem;
+    color: var(--amber);
+    letter-spacing: 0.1em;
+    margin-bottom: 1.2rem;
+    padding-left: 0.3rem;
+    border-left: 2px solid var(--amber-dim);
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+  }
+  .version-label .ver-num {
+    font-weight: 400;
+  }
+  .version-label .ver-name {
+    color: var(--text-dim);
+    font-weight: 300;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+  }
+  .version-label .ver-count {
+    margin-left: auto;
+    font-size: 0.7rem;
+    color: var(--amber-dim);
+    opacity: 0.6;
+  }
+
+  /* Masonry grid */
+  .masonry {
+    column-count: 3;
+    column-gap: 1rem;
+  }
+  @media (max-width: 900px) { .masonry { column-count: 2; } }
+  @media (max-width: 600px) { .masonry { column-count: 1; } }
+
+  .masonry-item {
+    break-inside: avoid;
+    margin-bottom: 1rem;
+    position: relative;
+    border-radius: 2px;
+    overflow: hidden;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+    cursor: pointer;
+  }
+  .masonry-item:hover {
+    border-color: var(--amber-dim);
+    box-shadow: 0 0 24px var(--amber-glow);
+    transform: translateY(-2px);
+  }
+  .masonry-item img {
+    width: 100%;
+    display: block;
+    filter: brightness(0.85) contrast(1.05);
+    transition: filter 0.4s;
+  }
+  .masonry-item:hover img {
+    filter: brightness(1) contrast(1.1);
+  }
+
+  /* Image overlay on hover */
+  .masonry-item .item-overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 1.2rem 1rem 0.8rem;
+    background: linear-gradient(transparent, rgba(8,11,16,0.9));
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .masonry-item:hover .item-overlay { opacity: 1; }
+  .item-overlay span {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.68rem;
+    color: var(--amber-dim);
+    letter-spacing: 0.06em;
+  }
+
+  /* Lightbox */
+  .lightbox {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(8,11,16,0.95);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .lightbox.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .lightbox img {
+    max-width: 92vw;
+    max-height: 92vh;
+    border: 1px solid var(--amber-dim);
+    border-radius: 2px;
+    box-shadow: 0 0 60px rgba(201,169,110,0.2);
+    filter: drop-shadow(0 0 20px var(--amber-glow));
+    cursor: default;
+  }
+  .lightbox-close {
+    position: absolute;
+    top: 2rem; right: 2rem;
+    width: 40px; height: 40px;
+    background: none;
+    border: 1px solid var(--amber-dim);
+    color: var(--amber-dim);
+    font-size: 1.2rem;
+    cursor: pointer;
+    font-family: 'Source Code Pro', monospace;
+    transition: all 0.3s;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 201;
+  }
+  .lightbox-close:hover {
+    color: var(--amber);
+    border-color: var(--amber);
+    box-shadow: 0 0 16px var(--amber-glow);
+  }
+  .lightbox-nav {
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    width: 44px; height: 44px;
+    background: rgba(13,17,25,0.7);
+    border: 1px solid rgba(201,169,110,0.2);
+    color: var(--amber-dim);
+    font-size: 1.1rem;
+    cursor: pointer;
+    font-family: 'Source Code Pro', monospace;
+    transition: all 0.3s;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 201;
+  }
+  .lightbox-nav:hover { color: var(--amber); border-color: var(--amber-dim); background: rgba(13,17,25,0.9); }
+  .lightbox-prev { left: 1.5rem; }
+  .lightbox-next { right: 1.5rem; }
+  .lightbox-counter {
+    position: absolute;
+    bottom: 2rem;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.72rem;
+    color: var(--amber-dim);
+    letter-spacing: 0.08em;
+  }
+
+  /* Footer */
+  .gallery-footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+  }
+  .gallery-footer p {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+    line-height: 1.8;
+  }
+
+  /* Visitor counter */
+  .visitor-badge {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.68rem;
+    color: var(--amber-dim);
+    letter-spacing: 0.1em;
+    opacity: 0.6;
+  }
+
+  /* Scan line glitch animation for gallery items */
+  @keyframes glitch-scan {
+    0%, 100% { opacity: 1; }
+    2% { opacity: 0.7; }
+    4% { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Custom cursor -->
+<div class="cursor" id="cursor"></div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose">&times;</button>
+  <button class="lightbox-nav lightbox-prev" id="lightboxPrev">&lsaquo;</button>
+  <img id="lightboxImg" src="" alt="">
+  <button class="lightbox-nav lightbox-next" id="lightboxNext">&rsaquo;</button>
+  <div class="lightbox-counter" id="lightboxCounter"></div>
+</div>
+
+<div class="container">
+  <a href="index.html" class="back-nav">&larr; twilit.index</a>
+
+  <div class="gallery-header">
+    <h1>官方壁纸廊</h1>
+    <p class="subtitle">重返未来：1999 // REVERSE:1999 OFFICIAL WALLPAPERS</p>
+    <div class="divider"></div>
+  </div>
+
+  <!-- Version 3.3 -->
+  <div class="version-section">
+    <div class="version-label">
+      <span class="ver-num">v3.3</span>
+      <span class="ver-name">远征记</span>
+      <span class="ver-count">3 张</span>
+    </div>
+    <div class="masonry" id="masonry-3-3">
+      <div class="masonry-item" data-src="assets/wallpapers/1999_16.jpg"><img src="assets/wallpapers/1999_16.jpg" loading="lazy" alt="远征记-01"><div class="item-overlay"><span>#01 远征记</span></div></div>
+      <div class="masonry-item" data-src="assets/wallpapers/1999_17.jpg"><img src="assets/wallpapers/1999_17.jpg" loading="lazy" alt="远征记-02"><div class="item-overlay"><span>#02 远征记</span></div></div>
+      <div class="masonry-item" data-src="assets/wallpapers/1999_18.jpg"><img src="assets/wallpapers/1999_18.jpg" loading="lazy" alt="远征记-03"><div class="item-overlay"><span>#03 远征记</span></div></div>
+    </div>
+  </div>
+
+  <!-- Version 3.2 -->
+  <div class="version-section">
+    <div class="version-label">
+      <span class="ver-num">v3.2</span>
+      <span class="ver-name">迁流的盛宴</span>
+      <span class="ver-count">9 张</span>
+    </div>
+    <div class="masonry" id="masonry-3-2">
+    </div>
+  </div>
+
+  <!-- Version 3.1 -->
+  <div class="version-section">
+    <div class="version-label">
+      <span class="ver-num">v3.1</span>
+      <span class="ver-name">长夜鸣笛</span>
+      <span class="ver-count">6 张</span>
+    </div>
+    <div class="masonry" id="masonry-3-1">
+    </div>
+  </div>
+
+  <div class="gallery-footer">
+    <p>图片版权归 BLUEPOCH / 重返未来：1999 官方所有<br>仅供壁纸收藏用途</p>
+  </div>
+
+  <div class="visitor-badge" id="visitorBadge">VISITOR_#0000</div>
+</div>
+
+<script>
+// Custom cursor
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
+});
+document.querySelectorAll('.masonry-item, .lightbox-close, .lightbox-nav, .back-nav').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+  el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+});
+
+// Populate masonry grids for 3.2 and 3.1
+const images = [];
+for (let i = 1; i <= 18; i++) {
+  images.push({ src: `assets/wallpapers/1999_${String(i).padStart(2,'0')}.jpg`, idx: i });
+}
+
+// 3.2: images 7-15 (9 images)
+const m32 = document.getElementById('masonry-3-2');
+images.filter(i => i.idx >= 7 && i.idx <= 15).forEach(img => {
+  const div = document.createElement('div');
+  div.className = 'masonry-item';
+  div.dataset.src = img.src;
+  div.innerHTML = `<img src="${img.src}" loading="lazy" alt="迁流的盛宴"><div class="item-overlay"><span>#${String(img.idx-6).padStart(2,'0')} 迁流的盛宴</span></div>`;
+  m32.appendChild(div);
+});
+
+// 3.1: images 1-6
+const m31 = document.getElementById('masonry-3-1');
+images.filter(i => i.idx <= 6).forEach(img => {
+  const div = document.createElement('div');
+  div.className = 'masonry-item';
+  div.dataset.src = img.src;
+  div.innerHTML = `<img src="${img.src}" loading="lazy" alt="长夜鸣笛"><div class="item-overlay"><span>#${String(img.idx).padStart(2,'0')} 长夜鸣笛</span></div>`;
+  m31.appendChild(div);
+});
+
+// Lightbox
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightboxImg');
+const lightboxCounter = document.getElementById('lightboxCounter');
+let currentItems = [];
+let currentIndex = 0;
+
+function openLightbox(items, index) {
+  currentItems = items;
+  currentIndex = index;
+  updateLightbox();
+  lightbox.classList.add('active');
+}
+
+function updateLightbox() {
+  lightboxImg.src = currentItems[currentIndex].dataset.src;
+  lightboxCounter.textContent = `${currentIndex + 1} / ${currentItems.length}`;
+}
+
+function closeLightbox() { lightbox.classList.remove('active'); }
+
+document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+document.getElementById('lightboxPrev').addEventListener('click', () => {
+  currentIndex = (currentIndex - 1 + currentItems.length) % currentItems.length;
+  updateLightbox();
+});
+document.getElementById('lightboxNext').addEventListener('click', () => {
+  currentIndex = (currentIndex + 1) % currentItems.length;
+  updateLightbox();
+});
+
+// Click on masonry items
+document.querySelectorAll('.masonry').forEach(masonry => {
+  masonry.addEventListener('click', e => {
+    const item = e.target.closest('.masonry-item');
+    if (!item) return;
+    const items = Array.from(item.parentElement.querySelectorAll('.masonry-item'));
+    const index = items.indexOf(item);
+    openLightbox(items, index);
+  });
+});
+
+// Keyboard navigation
+document.addEventListener('keydown', e => {
+  if (!lightbox.classList.contains('active')) return;
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowLeft') {
+    currentIndex = (currentIndex - 1 + currentItems.length) % currentItems.length;
+    updateLightbox();
+  }
+  if (e.key === 'ArrowRight') {
+    currentIndex = (currentIndex + 1) % currentItems.length;
+    updateLightbox();
+  }
+});
+
+// Visitor counter fetch
+fetch('/api/counter?page=gallery')
+  .then(r => r.json())
+  .then(data => {
+    document.getElementById('visitorBadge').textContent = `VISITOR_#${String(data.count).padStart(4,'0')}`;
+  })
+  .catch(() => {
+    document.getElementById('visitorBadge').textContent = 'VISITOR_#----';
+  });
+</script>
+</body>
+</html>

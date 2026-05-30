@@ -240,6 +240,93 @@
     color: var(--twilight);
   }
 
+  /* Guestbook */
+  .guestbook-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+  }
+  .gb-input {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    font-family: 'Noto Serif SC', serif;
+    font-size: 0.85rem;
+    padding: 0.65rem 0.8rem;
+    outline: none;
+    transition: border-color 0.3s;
+    resize: vertical;
+  }
+  .gb-input::placeholder { color: var(--text-dim); }
+  .gb-input:focus { border-color: var(--twilight-dim); }
+  .gb-textarea { min-height: 60px; }
+  .gb-btn {
+    align-self: flex-end;
+    background: transparent;
+    border: 1px solid var(--twilight-dim);
+    color: var(--twilight-dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    padding: 0.4rem 1.4rem;
+    cursor: pointer;
+    letter-spacing: 0.12em;
+    transition: all 0.3s;
+  }
+  .gb-btn:hover { color: var(--twilight); border-color: var(--twilight); }
+  .gb-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .gb-status {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    min-height: 1.2em;
+    letter-spacing: 0.05em;
+  }
+  .gb-status.success { color: #6ba368; }
+  .gb-status.error { color: #c0392b; }
+  .gb-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  .gb-msg-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    padding: 0.7rem 0.9rem;
+    font-size: 0.82rem;
+    animation: gbFadeIn 0.4s ease-out;
+  }
+  @keyframes gbFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .gb-msg-name {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--twilight-dim);
+    letter-spacing: 0.08em;
+    margin-bottom: 0.3rem;
+  }
+  .gb-msg-text {
+    color: var(--text);
+    line-height: 1.6;
+    word-break: break-word;
+  }
+  .gb-msg-time {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    margin-top: 0.4rem;
+  }
+  .gb-empty {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    padding: 1.5rem 0;
+    letter-spacing: 0.06em;
+  }
+
   /* ================================================
      [ENHANCED] Dynamic Effects & Visual Polish
      ================================================ */
@@ -538,6 +625,13 @@
         </div>
         <span class="project-arrow">→</span>
       </a>
+      <a href="gallery.html" class="project-card">
+        <div>
+          <div class="project-name">1999 官方壁纸廊</div>
+          <div class="project-desc">逆转 · 官方视觉档案</div>
+        </div>
+        <span class="project-arrow">→</span>
+      </a>
     </div>
   </section>
 
@@ -572,6 +666,18 @@
       <span class="tag">CRT</span>
       <span class="tag">晶体管</span>
     </div>
+  </section>
+
+  <!-- Guestbook -->
+  <section class="section">
+    <div class="section-title">· guestbook ·</div>
+    <div class="guestbook-form">
+      <input type="text" id="gb-name" class="gb-input" placeholder="name (optional)" maxlength="50">
+      <textarea id="gb-msg" class="gb-input gb-textarea" placeholder="leave a word..." maxlength="500" rows="2"></textarea>
+      <button id="gb-submit" class="gb-btn">SEND</button>
+      <p id="gb-status" class="gb-status"></p>
+    </div>
+    <div class="gb-messages" id="gb-messages"></div>
   </section>
 
   <!-- Footer -->
@@ -928,6 +1034,71 @@
         card.style.transform = 'perspective(600px) rotateX(0) rotateY(0) translateY(0)';
       });
     });
+  })();
+
+  /* -- Guestbook -- */
+  (function() {
+    var messagesEl = document.getElementById('gb-messages');
+    var nameEl = document.getElementById('gb-name');
+    var msgEl = document.getElementById('gb-msg');
+    var submitBtn = document.getElementById('gb-submit');
+    var statusEl = document.getElementById('gb-status');
+
+    function loadMessages() {
+      fetch('/api/guestbook?limit=20')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data.messages || data.messages.length === 0) {
+            messagesEl.innerHTML = '<div class="gb-empty">— 还没有留言，来做第一个 —</div>';
+            return;
+          }
+          var html = '';
+          data.messages.forEach(function(m) {
+            var time = m.created_at ? m.created_at.replace('T', ' ').slice(0, 16) : '';
+            html += '<div class="gb-msg-card">'
+              + '<div class="gb-msg-name">' + (m.name || 'anonymous') + '</div>'
+              + '<div class="gb-msg-text">' + m.message + '</div>'
+              + '<div class="gb-msg-time">' + time + '</div>'
+              + '</div>';
+          });
+          messagesEl.innerHTML = html;
+        })
+        .catch(function() {
+          messagesEl.innerHTML = '<div class="gb-empty">— 离线模式，留言板暂不可用 —</div>';
+        });
+    }
+
+    submitBtn.addEventListener('click', function() {
+      var msg = msgEl.value.trim();
+      if (!msg) { statusEl.textContent = '内容不能为空'; statusEl.className = 'gb-status error'; return; }
+      submitBtn.disabled = true;
+      statusEl.textContent = 'sending...';
+      statusEl.className = 'gb-status';
+      fetch('/api/guestbook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: nameEl.value.trim(), message: msg })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.success) {
+          msgEl.value = '';
+          statusEl.textContent = 'sent.';
+          statusEl.className = 'gb-status success';
+          loadMessages();
+        } else {
+          statusEl.textContent = data.error || 'failed';
+          statusEl.className = 'gb-status error';
+        }
+      })
+      .catch(function() {
+        statusEl.textContent = 'network error';
+        statusEl.className = 'gb-status error';
+      })
+      .finally(function() { submitBtn.disabled = false; });
+    });
+
+    loadMessages();
   })();
 
 </script>

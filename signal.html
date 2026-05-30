@@ -412,6 +412,96 @@
     50%      { opacity: 1;    box-shadow: 0 0 8px rgba(107,163,104,0.5); }
   }
 
+  /* ================================================
+     [NEW] Classified Visual Intel — Intercepted Images
+     ================================================ */
+  .visual-intel-section {
+    margin: 2rem 0;
+    padding: 1.2rem;
+    border: 1px dashed rgba(107,163,104,0.15);
+    background: rgba(107,163,104,0.03);
+    position: relative;
+  }
+  .visual-intel-section::before {
+    content: '■■■ INTERCEPTED ■■■';
+    position: absolute;
+    top: -0.55rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.58rem;
+    color: rgba(107,163,104,0.5);
+    letter-spacing: 0.15em;
+    background: #0a0f0a;
+    padding: 0 0.8rem;
+  }
+  .visual-intel-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(107,163,104,0.12);
+  }
+  .vi-label {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.6rem;
+    color: #c0392b;
+    border: 1px solid rgba(192,57,43,0.4);
+    padding: 0.15rem 0.4rem;
+    letter-spacing: 0.1em;
+  }
+  .vi-title {
+    font-size: 0.72rem;
+    color: rgba(107,163,104,0.75);
+    letter-spacing: 0.06em;
+  }
+  .vi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 0.8rem;
+  }
+  @media (max-width: 600px) { .vi-grid { grid-template-columns: repeat(2, 1fr); } }
+  .vi-item {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(107,163,104,0.15);
+    aspect-ratio: 16/9;
+    transition: border-color 0.3s;
+  }
+  .vi-item:hover { border-color: rgba(107,163,104,0.5); }
+  .vi-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.7) saturate(0.8) sepia(0.3);
+    transition: filter 0.4s;
+  }
+  .vi-item:hover img { filter: brightness(0.95) saturate(1) sepia(0); }
+  .vi-badge {
+    position: absolute;
+    bottom: 0.25rem; right: 0.25rem;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.55rem;
+    color: rgba(107,163,104,0.5);
+    background: rgba(10,15,10,0.8);
+    padding: 0.1rem 0.35rem;
+    letter-spacing: 0.08em;
+  }
+  .vi-footer {
+    text-align: right;
+    font-size: 0.68rem;
+  }
+  .vi-footer a {
+    color: rgba(107,163,104,0.55);
+    text-decoration: none;
+    font-family: 'Source Code Pro', monospace;
+    letter-spacing: 0.06em;
+    transition: color 0.3s;
+  }
+  .vi-footer a:hover { color: rgba(107,163,104,0.9); }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -471,6 +561,23 @@
   <button class="decode-btn" onclick="decode()">DECODE</button>
   <div class="decoded" id="decoded">
     "The future is already here. You just need to listen."
+  </div>
+
+  <!-- Classified Visual Intel -->
+  <div class="visual-intel-section">
+    <div class="visual-intel-header">
+      <span class="vi-label">[CLASSIFIED]</span>
+      <span class="vi-title">截获视觉信号 · INTERCEPTED VISUAL INTEL</span>
+    </div>
+    <div class="vi-grid">
+      <div class="vi-item"><img src="assets/wallpapers/1999_10.jpg" loading="lazy" alt="Intel-01"><span class="vi-badge">SIG-01</span></div>
+      <div class="vi-item"><img src="assets/wallpapers/1999_14.jpg" loading="lazy" alt="Intel-02"><span class="vi-badge">SIG-02</span></div>
+      <div class="vi-item"><img src="assets/wallpapers/1999_07.jpg" loading="lazy" alt="Intel-03"><span class="vi-badge">SIG-03</span></div>
+      <div class="vi-item"><img src="assets/wallpapers/1999_17.jpg" loading="lazy" alt="Intel-04"><span class="vi-badge">SIG-04</span></div>
+    </div>
+    <div class="vi-footer">
+      <a href="gallery.html">→ 查看完整视觉档案</a>
+    </div>
   </div>
 
   <div class="status-bar">
