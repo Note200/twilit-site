@@ -10,5 +10,18 @@
   },
   "compatibility_flags": [
     "nodejs_compat"
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "TWILIT_KV",
+      "id": "PLACEHOLDER_CREATE_IN_DASHBOARD"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "twilit_db",
+      "database_id": "PLACEHOLDER_CREATE_IN_DASHBOARD"
+    }
   ]
 }
