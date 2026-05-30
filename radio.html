@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>暮光短波电台 — twilit</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Serif+SC:wght@300;400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0d12;
+    --metal-dark: #1a1d22;
+    --metal-mid: #2a2e36;
+    --metal-light: #3a3e46;
+    --display-bg: #0d1a0d;
+    --display-glow: #5a8a4a;
+    --display-dim: #2a3a2a;
+    --knob-bronze: #8a6d3b;
+    --knob-gold: #c9a96e;
+    --needle: #d44a2a;
+    --warn: #c74b16;
+    --text: #9a9a8a;
+    --text-dim: #5a5a4a;
+  }
+
+  body {
+    background: #06080b;
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-x: hidden;
+    padding: 1rem;
+  }
+
+  /* Ambient background particles */
+  #bg-canvas {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* CRT scanlines over everything */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(90,138,74,0.02) 2px, rgba(90,138,74,0.02) 4px);
+    pointer-events: none;
+    z-index: 200;
+  }
+
+  /* ---- RADIO UNIT ---- */
+  .radio-unit {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 400px;
+    background: linear-gradient(180deg, var(--metal-dark) 0%, var(--metal-mid) 5%, var(--metal-dark) 80%, #111 100%);
+    border: 2px solid var(--metal-light);
+    border-radius: 12px;
+    padding: 1.5rem 1.5rem 2rem;
+    box-shadow:
+      inset 0 2px 4px rgba(255,255,255,0.03),
+      0 8px 32px rgba(0,0,0,0.6),
+      0 0 0 1px rgba(0,0,0,0.5);
+  }
+
+  /* Brand plate */
+  .brand-plate {
+    text-align: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid rgba(90,138,74,0.15);
+  }
+  .brand-plate .brand {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.4em;
+    color: rgba(90,138,74,0.4);
+  }
+  .brand-plate .model {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.3em;
+    color: rgba(90,138,74,0.25);
+    margin-top: 0.2rem;
+  }
+
+  /* ---- DISPLAY ---- */
+  .display {
+    background: var(--display-bg);
+    border: 2px solid #111;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1.2rem;
+    position: relative;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 12px rgba(90,138,74,0.08);
+    min-height: 140px;
+  }
+
+  .display::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 50% 50%, rgba(90,138,74,0.03) 0%, transparent 70%);
+    pointer-events: none;
+    border-radius: 6px;
+  }
+
+  .freq-display {
+    text-align: center;
+    margin-bottom: 0.5rem;
+    position: relative;
+    z-index: 1;
+  }
+  .freq-main {
+    font-size: 2.2rem;
+    color: var(--display-glow);
+    letter-spacing: 0.05em;
+    text-shadow: 0 0 12px rgba(90,138,74,0.3);
+    transition: color 0.5s;
+  }
+  .freq-unit {
+    font-size: 0.7rem;
+    color: var(--display-dim);
+    letter-spacing: 0.15em;
+    vertical-align: super;
+  }
+
+  .signal-meter {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 24px;
+    margin: 0.5rem 0;
+    position: relative;
+    z-index: 1;
+  }
+  .signal-bar {
+    flex: 1;
+    background: var(--display-dim);
+    transition: height 0.3s, background 0.3s;
+    min-height: 2px;
+  }
+  .signal-bar.active { background: var(--display-glow); }
+  .signal-bar.peak { background: var(--display-glow); box-shadow: 0 0 4px var(--display-glow); }
+
+  .channel-label {
+    text-align: center;
+    font-size: 0.65rem;
+    color: var(--display-dim);
+    letter-spacing: 0.15em;
+    position: relative;
+    z-index: 1;
+    margin-top: 0.3rem;
+    min-height: 1.2rem;
+  }
+
+  /* ---- CHANNEL MESSAGE ---- */
+  .msg-area {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 0.8rem;
+    color: rgba(90,138,74,0.7);
+    margin-top: 0.5rem;
+    line-height: 1.7;
+    min-height: 2.5rem;
+    opacity: 0;
+    transition: opacity 0.8s;
+  }
+  .msg-area.visible { opacity: 1; }
+
+  /* ---- KNOB AREA ---- */
+  .knob-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    margin: 1rem 0;
+  }
+
+  .knob-container {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    cursor: grab;
+  }
+  .knob-container:active { cursor: grabbing; }
+  .knob-container.grabbing { cursor: grabbing; }
+
+  .knob {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 40%, #4a3a1a, #2a1a08);
+    border: 3px solid var(--knob-bronze);
+    box-shadow:
+      inset 0 2px 4px rgba(255,255,255,0.05),
+      0 4px 12px rgba(0,0,0,0.5);
+    transition: box-shadow 0.2s;
+  }
+  .knob-container.grabbing .knob,
+  .knob-container:active .knob {
+    box-shadow:
+      inset 0 2px 4px rgba(255,255,255,0.05),
+      0 4px 12px rgba(0,0,0,0.5),
+      0 0 20px rgba(201,169,110,0.2);
+  }
+
+  .knob-indicator {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 3px;
+    height: 14px;
+    background: var(--knob-gold);
+    border-radius: 2px;
+    transform-origin: center 42px;
+    transition: box-shadow 0.2s;
+  }
+  .knob-container.grabbing .knob-indicator,
+  .knob-container:active .knob-indicator {
+    box-shadow: 0 0 6px var(--knob-gold);
+  }
+
+  .knob-center {
+    position: absolute;
+    top: 32px; left: 32px;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #6a4a20, #2a1a08);
+    border: 2px solid var(--knob-bronze);
+  }
+
+  /* Frequency scale marks */
+  .scale-marks {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100px; height: 100px;
+    pointer-events: none;
+  }
+  .scale-mark {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 1px;
+    height: 6px;
+    background: var(--display-dim);
+    transform-origin: 0 0;
+  }
+
+  /* ---- BANDS ---- */
+  .band-selector {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin: 0.5rem 0;
+  }
+  .band-btn {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid rgba(90,138,74,0.2);
+    background: rgba(90,138,74,0.03);
+    color: var(--display-dim);
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    transition: all 0.3s;
+  }
+  .band-btn:hover { border-color: rgba(90,138,74,0.4); color: var(--display-glow); }
+  .band-btn.active { border-color: var(--display-glow); color: var(--display-glow); background: rgba(90,138,74,0.08); }
+
+  /* ---- CONTROLS ---- */
+  .controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(90,138,74,0.1);
+  }
+  .vol-slider {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .vol-label {
+    font-size: 0.55rem;
+    color: var(--display-dim);
+    letter-spacing: 0.15em;
+  }
+  .vol-slider input[type="range"] {
+    -webkit-appearance: none;
+    width: 80px;
+    height: 4px;
+    background: var(--display-dim);
+    border-radius: 2px;
+    outline: none;
+  }
+  .vol-slider input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    background: var(--metal-light);
+    border: 1px solid var(--knob-bronze);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .power-led {
+    width: 6px; height: 6px;
+    background: var(--display-glow);
+    border-radius: 50%;
+    box-shadow: 0 0 6px var(--display-glow);
+    animation: led-pulse 2s infinite;
+  }
+  @keyframes led-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .back-link {
+    text-align: center;
+    margin-top: 1.2rem;
+    font-size: 0.65rem;
+  }
+  .back-link a {
+    color: rgba(90,138,74,0.25);
+    text-decoration: none;
+    letter-spacing: 0.1em;
+  }
+  .back-link a:hover { color: var(--display-glow); }
+
+  /* ---- LOCKED CHANNEL MODAL ---- */
+  .unlock-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(6,8,11,0.95);
+    z-index: 300;
+    justify-content: center;
+    align-items: center;
+    color: var(--display-glow);
+    text-align: center;
+    padding: 2rem;
+  }
+  .unlock-overlay.open { display: flex; }
+  .unlock-msg {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 1rem;
+    line-height: 2;
+    max-width: 300px;
+  }
+  .unlock-msg .freq {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.5rem;
+    display: block;
+    margin: 1rem 0;
+    text-shadow: 0 0 16px var(--display-glow);
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<div class="radio-unit">
+  <div class="brand-plate">
+    <div class="brand">暮光短波电台</div>
+    <div class="model">TWILIT RECEIVER · MODEL T-1999</div>
+  </div>
+
+  <div class="display">
+    <div class="freq-display">
+      <span class="freq-main" id="freq-num">1420</span>
+      <span class="freq-unit" id="freq-band">MHz</span>
+    </div>
+    <div class="signal-meter" id="signal-meter">
+      <div class="signal-bar"></div><div class="signal-bar"></div><div class="signal-bar"></div>
+      <div class="signal-bar"></div><div class="signal-bar"></div><div class="signal-bar"></div>
+      <div class="signal-bar"></div><div class="signal-bar"></div><div class="signal-bar"></div>
+      <div class="signal-bar"></div>
+    </div>
+    <div class="channel-label" id="channel-name">HYDROGEN LINE</div>
+    <div class="msg-area" id="channel-msg"></div>
+  </div>
+
+  <div class="knob-section">
+    <div class="knob-container" id="knob-container">
+      <div class="scale-marks" id="scale-marks"></div>
+      <div class="knob" id="knob">
+        <div class="knob-indicator" id="knob-indicator"></div>
+        <div class="knob-center"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="band-selector" id="band-selector"></div>
+
+  <div class="controls">
+    <div class="vol-slider">
+      <span class="vol-label">VOL</span>
+      <input type="range" id="vol-slider" min="0" max="100" value="40">
+    </div>
+    <div>
+      <span style="font-size:0.6rem;color:var(--display-dim);letter-spacing:0.15em;">SIG</span>
+      <div class="power-led" id="power-led"></div>
+    </div>
+  </div>
+
+  <div class="back-link"><a href="index.html">← back to twilit</a></div>
+</div>
+
+<div class="unlock-overlay" id="unlock-modal">
+  <div class="unlock-msg" id="unlock-msg"></div>
+</div>
+
+<script>
+// ---- AUDIO ENGINE ----
+let audioCtx = null;
+let currentOscillators = [];
+let currentGain = null;
+let masterGain = null;
+let noiseNode = null;
+let noiseGain = null;
+let isAudioStarted = false;
+
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.4;
+  masterGain.connect(audioCtx.destination);
+
+  // Noise generator
+  const bufferSize = 2 * audioCtx.sampleRate;
+  const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = noiseBuffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+  noiseNode = audioCtx.createBufferSource();
+  noiseNode.buffer = noiseBuffer;
+  noiseNode.loop = true;
+  noiseGain = audioCtx.createGain();
+  noiseGain.gain.value = 0.02;
+  noiseNode.connect(noiseGain);
+  noiseGain.connect(masterGain);
+  noiseNode.start();
+
+  isAudioStarted = true;
+}
+
+function stopAllSound() {
+  currentOscillators.forEach(o => {
+    try { o.stop(); } catch(e) {}
+    try { o.disconnect(); } catch(e) {}
+  });
+  currentOscillators = [];
+  if (currentGain) {
+    try { currentGain.disconnect(); } catch(e) {}
+    currentGain = null;
+  }
+}
+
+function playTone(freqs, type = 'sine', gainVal = 0.15, detune = 0) {
+  if (!isAudioStarted) initAudio();
+  stopAllSound();
+  currentGain = audioCtx.createGain();
+  currentGain.gain.value = gainVal;
+  currentGain.connect(masterGain);
+  const freqsArr = Array.isArray(freqs) ? freqs : [freqs];
+  freqsArr.forEach(f => {
+    const osc = audioCtx.createOscillator();
+    osc.type = type;
+    osc.frequency.value = f;
+    if (detune) osc.detune.value = detune;
+    osc.connect(currentGain);
+    osc.start();
+    currentOscillators.push(osc);
+  });
+}
+
+// ---- CHANNEL DEFINITIONS ----
+const bands = [
+  {
+    id: 'sw',
+    name: 'SW',
+    channels: [
+      { freq: 1420, unit: 'MHz', label: 'HYDROGEN LINE', type: 'space',
+        msg: '1420.4 兆赫——宇宙最孤独的频率。<br>氢原子在自旋翻转时发出的唯一叹息。',
+        sound: (n) => {
+          const base = 220 + n * 8;
+          playTone([base, base * 1.01], 'sine', 0.12, 3);
+          noiseGain.gain.linearRampToValueAtTime(0.01 + n * 0.003, audioCtx.currentTime + 0.3);
+        }
+      },
+      { freq: 1665, unit: 'MHz', label: 'HYDROXYL LINE', type: 'space',
+        msg: '如果氢线是提问，羟基线就是回答。<br>SETI 在这两条线之间寻找水。',
+        sound: (n) => {
+          playTone([330, 494, 330 * 1.5], 'triangle', 0.1, 5);
+          noiseGain.gain.linearRampToValueAtTime(0.008 + n * 0.002, audioCtx.currentTime + 0.3);
+        }
+      },
+      { freq: 3182, unit: 'MHz', label: 'COSMIC ECHO', type: 'space',
+        msg: '超过氢氧窗口，只剩下宇宙微波背景辐射。<br>138 亿年的余温。',
+        sound: (n) => {
+          playTone([176, 176 * 1.003], 'sine', 0.08, 2);
+          noiseGain.gain.linearRampToValueAtTime(0.02 + n * 0.004, audioCtx.currentTime + 0.3);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mw',
+    name: 'MW',
+    channels: [
+      { freq: 1999, unit: 'kHz', label: 'THE LAST BROADCAST', type: 'signal',
+        msg: '1999年12月31日 23:59:59<br>"千年虫没来。<br>但有什么别的东西醒了。"',
+        sound: (n) => {
+          playTone([440 * (1 + n * 0.002)], 'sawtooth', 0.06, -2);
+          noiseGain.gain.linearRampToValueAtTime(0.03 + n * 0.006, audioCtx.currentTime + 0.3);
+        }
+      },
+      { freq: 723, unit: 'kHz', label: 'NUMBER STATION', type: 'signal',
+        msg: '重复的数字串。没有人承认它是自己发的。<br>0 3 2 7 1 9 4 8 …',
+        sound: (n) => {
+          playTone([523, 659], 'square', 0.05, 0);
+          noiseGain.gain.linearRampToValueAtTime(0.02 + n * 0.005, audioCtx.currentTime + 0.3);
+        }
+      },
+      { freq: 1120, unit: 'kHz', label: 'GHOST CARRIER', type: 'signal',
+        msg: '有载波，没有调制。<br>有人在发送沉默。',
+        sound: (n) => {
+          playTone([280], 'sine', 0.18, 0);
+          noiseGain.gain.linearRampToValueAtTime(0.005, audioCtx.currentTime + 0.3);
+        }
+      }
+    ]
+  },
+  {
+    id: 'tr',
+    name: 'TR',
+    channels: [
+      { freq: 432, unit: 'Hz', label: 'TRANSISTOR LULLABY', type: 'lullaby',
+        msg: '一颗 2N2222 在哼唱。<br>它才不在乎什么傅里叶变换。',
+        sound: (n) => {
+          playTone([432, 648, 864, 540], 'triangle', 0.08, 0);
+          noiseGain.gain.linearRampToValueAtTime(0.003, audioCtx.currentTime + 0.3);
+        }
+      },
+      { freq: 256, unit: 'Hz', label: 'MIDDLE C OF SILICON', type: 'lullaby',
+        msg: '硅的共振点。<br>工程师在数据手册的夹页里发现的。',
+        sound: (n) => {
+          playTone([256, 384, 512, 320], 'sine', 0.1, 1);
+          noiseGain.gain.linearRampToValueAtTime(0.003, audioCtx.currentTime + 0.3);
+        }
+      },
+      { freq: 128, unit: 'Hz', label: 'SUB-BASEMENT', type: 'lullaby',
+        msg: '低到电容开始漏电。<br>再低一格就是直流。',
+        sound: (n) => {
+          playTone([128, 128.5, 192, 256], 'sine', 0.14, 0.8);
+          noiseGain.gain.linearRampToValueAtTime(0.002, audioCtx.currentTime + 0.3);
+        }
+      }
+    ]
+  },
+  {
+    id: 'xx',
+    name: '??',
+    channels: [
+      { freq: 0, unit: '', label: '████████', type: 'hidden',
+        locked: true,
+        unlockFreq: '███',
+        msg: '',
+        sound: (n) => { stopAllSound(); noiseGain.gain.value = 0; }
+      }
+    ]
+  }
+];
+
+let currentBandIdx = 0;
+let currentChannelIdx = 0;
+let knobAngle = 0; // degrees, 0 = top
+
+// Tracking visited channels for unlock
+let visitedChannels = new Set(JSON.parse(localStorage.getItem('twilit_visited') || '[]'));
+
+function markVisited(bandId, chIdx) {
+  const key = `${bandId}_${chIdx}`;
+  visitedChannels.add(key);
+  localStorage.setItem('twilit_visited', JSON.stringify([...visitedChannels]));
+}
+
+function checkAllVisited() {
+  const all = [];
+  bands.forEach((b, bi) => {
+    if (b.id === 'xx') return;
+    b.channels.forEach((ch, ci) => {
+      all.push(`${b.id}_${ci}`);
+    });
+  });
+  return all.every(k => visitedChannels.has(k));
+}
+
+// ---- RENDER ----
+function buildScaleMarks() {
+  const container = document.getElementById('scale-marks');
+  container.innerHTML = '';
+  for (let i = 0; i < 36; i++) {
+    const deg = i * 10;
+    const rad = (deg - 90) * Math.PI / 180;
+    const len = i % 9 === 0 ? 10 : (i % 3 === 0 ? 7 : 4);
+    const r1 = 46;
+    const r2 = r1 - len;
+    const mark = document.createElement('div');
+    mark.className = 'scale-mark';
+    mark.style.cssText = `
+      transform: translate(${Math.cos(rad) * r1 - 0.5}px, ${Math.sin(rad) * r1 - 3}px)
+                 rotate(${deg}deg);
+      height: ${len}px;
+      opacity: ${i % 9 === 0 ? 0.5 : 0.2};
+    `;
+    container.appendChild(mark);
+  }
+}
+
+function buildBandButtons() {
+  const container = document.getElementById('band-selector');
+  container.innerHTML = '';
+  bands.forEach((b, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'band-btn' + (i === currentBandIdx ? ' active' : '');
+    btn.textContent = b.name;
+    btn.addEventListener('click', () => switchBand(i));
+    container.appendChild(btn);
+  });
+}
+
+function setKnobAngle(deg) {
+  knobAngle = deg;
+  document.getElementById('knob-indicator').style.transform = `rotate(${deg}deg)`;
+}
+
+function tuneToChannel(bandIdx, chIdx) {
+  currentBandIdx = bandIdx;
+  currentChannelIdx = chIdx;
+  const band = bands[bandIdx];
+  const ch = band.channels[chIdx];
+
+  if (ch.locked) {
+    document.getElementById('freq-num').textContent = '----';
+    document.getElementById('freq-band').textContent = '';
+    document.getElementById('channel-name').textContent = ch.label;
+    document.getElementById('channel-msg').innerHTML = '';
+    document.getElementById('channel-msg').classList.remove('visible');
+    updateSignalMeter(0);
+    stopAllSound();
+    if (noiseGain) noiseGain.gain.value = 0;
+    return;
+  }
+
+  document.getElementById('freq-num').textContent = ch.freq;
+  document.getElementById('freq-band').textContent = ch.unit;
+  document.getElementById('channel-name').textContent = ch.label;
+
+  const msgEl = document.getElementById('channel-msg');
+  msgEl.innerHTML = ch.msg;
+  msgEl.classList.remove('visible');
+  requestAnimationFrame(() => { msgEl.classList.add('visible'); });
+
+  markVisited(band.id, chIdx);
+
+  const noiseLevel = 0.1 + Math.random() * 0.4;
+  updateSignalMeter(noiseLevel);
+
+  if (ch.sound && isAudioStarted) ch.sound(noiseLevel);
+
+  // Update band buttons
+  document.querySelectorAll('.band-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', i === bandIdx);
+  });
+}
+
+function switchBand(idx) {
+  currentBandIdx = idx;
+  currentChannelIdx = 0;
+  const band = bands[idx];
+  const ch = band.channels[0];
+  if (ch.locked) {
+    // Check unlock condition
+    if (checkAllVisited()) {
+      unlockHidden();
+    } else {
+      showUnlockHint();
+      currentBandIdx = 0;
+      currentChannelIdx = 0;
+      tuneToChannel(0, 0);
+      setKnobAngle(0);
+      return;
+    }
+  }
+  tuneToChannel(idx, 0);
+  setKnobAngle(0);
+}
+
+function unlockHidden() {
+  const hidden = bands[3].channels[0];
+  hidden.locked = false;
+  hidden.freq = 1337;
+  hidden.unit = 'Hz';
+  hidden.label = 'THE CARRIER BETWEEN';
+  hidden.type = 'secret';
+  hidden.msg = '你找到了它。<br>所有频段之间那个不存在的频段。<br>沉默本身就是最响亮的信号。';
+  hidden.sound = (n) => {
+    playTone([220, 330, 440, 550, 660], 'sine', 0.06, 0);
+    noiseGain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+  };
+  document.getElementById('band-selector').children[3].textContent = 'SEC';
+  bands[3].name = 'SEC';
+  tuneToChannel(3, 0);
+  setKnobAngle(0);
+}
+
+function showUnlockHint() {
+  document.getElementById('unlock-msg').innerHTML =
+    '该频段已锁定。<br>需要先访问所有其他频道。<br><br>已访问：' + visitedChannels.size + ' / 9<br><br><span style="font-size:0.7rem;color:var(--display-dim)">点击任意处关闭</span>';
+  document.getElementById('unlock-modal').classList.add('open');
+}
+
+document.getElementById('unlock-modal').addEventListener('click', () => {
+  document.getElementById('unlock-modal').classList.remove('open');
+});
+
+function updateSignalMeter(level) {
+  const bars = document.getElementById('signal-meter').children;
+  const activeCount = Math.floor(level * bars.length);
+  for (let i = 0; i < bars.length; i++) {
+    bars[i].classList.toggle('active', i < activeCount);
+    bars[i].classList.toggle('peak', i === activeCount - 1 && activeCount > 0);
+  }
+}
+
+// ---- KNOB DRAG ----
+const knobContainer = document.getElementById('knob-container');
+let isDragging = false;
+let dragStartAngle = 0;
+let dragStartKnobAngle = 0;
+
+function getAngle(e) {
+  const rect = knobContainer.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const px = e.touches ? e.touches[0].clientX : e.clientX;
+  const py = e.touches ? e.touches[0].clientY : e.clientY;
+  return Math.atan2(py - cy, px - cx) * 180 / Math.PI + 90;
+}
+
+knobContainer.addEventListener('mousedown', startDrag);
+knobContainer.addEventListener('touchstart', startDrag, { passive: false });
+window.addEventListener('mousemove', drag);
+window.addEventListener('touchmove', drag, { passive: false });
+window.addEventListener('mouseup', endDrag);
+window.addEventListener('touchend', endDrag);
+
+function startDrag(e) {
+  if (!isAudioStarted) initAudio();
+  e.preventDefault();
+  isDragging = true;
+  knobContainer.classList.add('grabbing');
+  dragStartAngle = getAngle(e);
+  dragStartKnobAngle = knobAngle;
+}
+
+function drag(e) {
+  if (!isDragging) return;
+  e.preventDefault();
+  const currentAngle = getAngle(e);
+  let delta = currentAngle - dragStartAngle;
+  if (delta > 180) delta -= 360;
+  if (delta < -180) delta += 360;
+
+  let newAngle = dragStartKnobAngle + delta;
+  // Map angle 0-360 to channel
+  const band = bands[currentBandIdx];
+  const totalChannels = band.channels.length;
+  const segmentSize = 360 / totalChannels;
+  // Clamp
+  newAngle = ((newAngle % 360) + 360) % 360;
+
+  const chIdx = Math.floor(newAngle / segmentSize);
+  const clampedIdx = Math.min(chIdx, totalChannels - 1);
+
+  if (clampedIdx !== currentChannelIdx) {
+    const ch = band.channels[clampedIdx];
+    if (ch.locked) {
+      if (checkAllVisited()) {
+        unlockHidden();
+      } else {
+        showUnlockHint();
+        return;
+      }
+    }
+    currentChannelIdx = clampedIdx;
+    tuneToChannel(currentBandIdx, clampedIdx);
+  }
+
+  setKnobAngle(newAngle);
+}
+
+function endDrag() {
+  isDragging = false;
+  knobContainer.classList.remove('grabbing');
+  // Snap to nearest channel
+  const band = bands[currentBandIdx];
+  const totalChannels = band.channels.length;
+  const segmentSize = 360 / totalChannels;
+  const snapIdx = Math.round(knobAngle / segmentSize) % totalChannels;
+  const snapAngle = snapIdx * segmentSize;
+  setKnobAngle(snapAngle);
+  if (snapIdx !== currentChannelIdx) {
+    currentChannelIdx = snapIdx;
+    tuneToChannel(currentBandIdx, snapIdx);
+  }
+}
+
+// ---- VOLUME ----
+document.getElementById('vol-slider').addEventListener('input', function() {
+  if (masterGain) masterGain.gain.value = this.value / 100;
+});
+
+// ---- BACKGROUND PARTICLES ----
+const bgCanvas = document.getElementById('bg-canvas');
+const bgCtx = bgCanvas.getContext('2d');
+let particles = [];
+
+function resizeCanvas() {
+  bgCanvas.width = window.innerWidth;
+  bgCanvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+function createParticles() {
+  particles = [];
+  const count = Math.floor(bgCanvas.width * bgCanvas.height / 12000);
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * bgCanvas.width,
+      y: Math.random() * bgCanvas.height,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      size: Math.random() * 1.5 + 0.5,
+      alpha: Math.random() * 0.4 + 0.1,
+      fadeSpeed: (Math.random() - 0.5) * 0.005
+    });
+  }
+}
+createParticles();
+window.addEventListener('resize', createParticles);
+
+function animateParticles() {
+  bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+  const noiseLevel = isDragging ? 0.6 : (currentChannelIdx !== null ? 0.3 + (currentChannelIdx * 0.1) : 0.3);
+
+  particles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.alpha += p.fadeSpeed;
+    if (p.alpha > 0.6) p.fadeSpeed = -Math.abs(p.fadeSpeed);
+    if (p.alpha < 0.05) p.fadeSpeed = Math.abs(p.fadeSpeed);
+    if (p.x < 0) p.x = bgCanvas.width;
+    if (p.x > bgCanvas.width) p.x = 0;
+    if (p.y < 0) p.y = bgCanvas.height;
+    if (p.y > bgCanvas.height) p.y = 0;
+
+    bgCtx.beginPath();
+    bgCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    bgCtx.fillStyle = `rgba(90, 138, 74, ${p.alpha * noiseLevel})`;
+    bgCtx.fill();
+  });
+
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+// ---- INIT ----
+buildScaleMarks();
+buildBandButtons();
+setKnobAngle(0);
+tuneToChannel(0, 0);
+
+// Safari audio unlock
+document.addEventListener('click', () => { if (!isAudioStarted) initAudio(); }, { once: true });
+document.addEventListener('touchstart', () => { if (!isAudioStarted) initAudio(); }, { once: true });
+</script>
+</body>
+</html>

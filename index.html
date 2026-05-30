@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>twilit — 虚室生白</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=Space+Mono&display=swap');
+
+  :root {
+    --bg: #080b10;
+    --twilight: #c9a96e;
+    --twilight-dim: #7a6543;
+    --twilight-pale: #e8d5b0;
+    --scanline: rgba(201,169,110,0.03);
+    --card-bg: #0d1119;
+    --card-border: rgba(201,169,110,0.12);
+    --text: #b8b4a8;
+    --text-dim: #6b6760;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Serif SC', serif;
+    line-height: 1.8;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* CRT overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      var(--scanline) 2px,
+      var(--scanline) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at center, transparent 60%, rgba(8,11,16,0.7) 100%);
+    pointer-events: none;
+    z-index: 99;
+  }
+
+  .container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 4rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Hero */
+  .hero {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-top: 2rem;
+  }
+
+  .domain {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    color: var(--twilight-dim);
+    text-transform: lowercase;
+    margin-bottom: 1.5rem;
+  }
+
+  .motto {
+    font-size: 2rem;
+    font-weight: 300;
+    color: var(--twilight);
+    letter-spacing: 0.25em;
+    margin-bottom: 0.8rem;
+  }
+
+  .motto-sub {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+  }
+
+  .name {
+    font-size: 1.1rem;
+    color: var(--twilight-pale);
+    letter-spacing: 0.08em;
+    margin-top: 2rem;
+  }
+
+  /* Divider */
+  .divider {
+    width: 60px;
+    height: 1px;
+    background: var(--twilight-dim);
+    margin: 2.5rem auto;
+    position: relative;
+  }
+  .divider::after {
+    content: '◇';
+    position: absolute;
+    top: -0.6rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.6rem;
+    color: var(--twilight-dim);
+    background: var(--bg);
+    padding: 0 0.5rem;
+  }
+
+  /* Section */
+  .section {
+    margin-bottom: 2.5rem;
+  }
+
+  .section-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--twilight-dim);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    padding-left: 0.3rem;
+    border-left: 1px solid var(--twilight-dim);
+  }
+
+  /* Bio */
+  .bio {
+    font-size: 0.95rem;
+    color: var(--text);
+    line-height: 2;
+  }
+
+  /* Project cards */
+  .projects {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .project-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    padding: 1rem 1.2rem;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: border-color 0.3s;
+    min-height: 48px;
+  }
+
+  .project-card:hover,
+  .project-card:active {
+    border-color: var(--twilight-dim);
+  }
+
+  .project-name {
+    font-size: 0.95rem;
+    color: var(--twilight-pale);
+  }
+
+  .project-desc {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    margin-top: 0.2rem;
+  }
+
+  .project-arrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--twilight-dim);
+    flex-shrink: 0;
+  }
+
+  /* GitHub repos */
+  .repo-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    padding: 1rem 1.2rem;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: border-color 0.3s;
+  }
+  .repo-card:hover,
+  .repo-card:active {
+    border-color: var(--twilight-dim);
+  }
+  .repo-lang {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--twilight-dim);
+    margin-top: 0.4rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* Tech tags */
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--card-border);
+    color: var(--twilight-dim);
+    letter-spacing: 0.05em;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-top: 3rem;
+    letter-spacing: 0.1em;
+  }
+  .footer a {
+    color: var(--twilight-dim);
+    text-decoration: none;
+  }
+  .footer a:hover {
+    color: var(--twilight);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="domain">twilit.site</div>
+    <div class="motto">虚室生白</div>
+    <div class="motto-sub">the empty room gives birth to light</div>
+    <div class="name">peng gong</div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Bio -->
+  <section class="section">
+    <div class="section-title">· about ·</div>
+    <p class="bio">
+      Born in winter 2005. Write code at dusk.<br>
+      Favor the space between light and shadow —<br>
+      CRT phosphor on black glass, amber on obsidian.<br>
+      System programming, embedded rust,<br>
+      and the quiet conviction that<br>
+      a single line can change the world.
+    </p>
+  </section>
+
+  <!-- Projects -->
+  <section class="section">
+    <div class="section-title">· projects ·</div>
+    <div class="projects">
+      <a href="y2k.html" class="project-card">
+        <div>
+          <div class="project-name">Y2K 晶体管诊断仪</div>
+          <div class="project-desc">琥珀 CRT · 故障诊断台</div>
+        </div>
+        <span class="project-arrow">→</span>
+      </a>
+      <a href="signal.html" class="project-card">
+        <div>
+          <div class="project-name">1999 异常信号终端</div>
+          <div class="project-desc">灰绿 CRT · ARG 叙事</div>
+        </div>
+        <span class="project-arrow">→</span>
+      </a>
+      <a href="poetry.html" class="project-card">
+        <div>
+          <div class="project-name">废话诗社</div>
+          <div class="project-desc">白居易锐评 · 荒诞诗歌</div>
+        </div>
+        <span class="project-arrow">→</span>
+      </a>
+      <a href="radio.html" class="project-card">
+        <div>
+          <div class="project-name">暮光短波电台</div>
+          <div class="project-desc">绿光 CRT · 短波调谐器</div>
+        </div>
+        <span class="project-arrow">→</span>
+      </a>
+      <a href="pet.html" class="project-card">
+        <div>
+          <div class="project-name">晶体管宠物</div>
+          <div class="project-desc">琥珀 CRT · 养成 2N2222</div>
+        </div>
+        <span class="project-arrow">→</span>
+      </a>
+      <a href="chatlog.html" class="project-card">
+        <div>
+          <div class="project-name">对话记录</div>
+          <div class="project-desc">Marvis × twilit 建造日志</div>
+        </div>
+        <span class="project-arrow">→</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- GitHub -->
+  <section class="section">
+    <div class="section-title">· github ·</div>
+    <div class="projects">
+      <a href="https://github.com/Note200/study-checkin-backend" class="repo-card" target="_blank">
+        <div class="project-name">study-checkin-backend</div>
+        <div class="repo-lang">Java</div>
+      </a>
+      <a href="https://github.com/Note200/study-checkin-miniapp" class="repo-card" target="_blank">
+        <div class="project-name">study-checkin-miniapp</div>
+        <div class="repo-lang">JavaScript</div>
+      </a>
+      <a href="https://github.com/Note200/cloud-mail" class="repo-card" target="_blank">
+        <div class="project-name">cloud-mail</div>
+        <div class="repo-lang">Cloudflare Email · Fork</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- Stack -->
+  <section class="section">
+    <div class="section-title">· stack ·</div>
+    <div class="tags">
+      <span class="tag">C</span>
+      <span class="tag">Rust</span>
+      <span class="tag">Python</span>
+      <span class="tag">Linux</span>
+      <span class="tag">嵌入式</span>
+      <span class="tag">CRT</span>
+      <span class="tag">晶体管</span>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    twilight falls on all things equally<br>
+    <a href="https://github.com/Note200" target="_blank">github/note200</a>
+  </footer>
+
+</div>
+</body>
+</html>

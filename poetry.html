@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>废话诗社 — twilit</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@300;400;700&family=Courier+Prime&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #1a1510;
+    color: #c4a97d;
+    font-family: 'Noto Serif SC', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Aged paper texture */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(139,109,69,0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(139,109,69,0.03) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* Decayed CRT lines */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(196,169,125,0.02) 3px,
+      rgba(196,169,125,0.02) 6px
+    );
+    pointer-events: none;
+    z-index: 99;
+  }
+
+  .container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 2rem 1.2rem 4rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Temple plaque */
+  .plaque {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    padding: 1.5rem 0;
+    border-top: 1px solid rgba(196,169,125,0.2);
+    border-bottom: 1px solid rgba(196,169,125,0.2);
+  }
+  .plaque h1 {
+    font-family: 'Ma Shan Zheng', cursive;
+    font-size: 2.8rem;
+    color: #d4b896;
+    letter-spacing: 0.5em;
+    text-shadow: 0 0 20px rgba(196,169,125,0.15);
+  }
+  .plaque .sub {
+    font-size: 0.8rem;
+    color: rgba(196,169,125,0.5);
+    margin-top: 0.5rem;
+    letter-spacing: 0.2em;
+  }
+
+  /* Couplet */
+  .couplet {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Ma Shan Zheng', cursive;
+    font-size: 1.4rem;
+    color: rgba(196,169,125,0.6);
+    margin: 1.5rem 0;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    height: 180px;
+    gap: 1rem;
+  }
+  .couplet-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .couplet-char {
+    opacity: 0.7;
+  }
+
+  /* Poem card */
+  .poem {
+    position: relative;
+    border: 1px solid rgba(196,169,125,0.15);
+    padding: 1.5rem;
+    margin-bottom: 1.2rem;
+    background: rgba(26,21,16,0.8);
+  }
+  .poem::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(196,169,125,0.3), transparent);
+  }
+  .poem-title {
+    font-size: 1.1rem;
+    color: #d4b896;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.08em;
+  }
+  .poem-author {
+    font-size: 0.7rem;
+    color: rgba(196,169,125,0.35);
+    margin-bottom: 1rem;
+    letter-spacing: 0.1em;
+  }
+  .poem-body {
+    font-size: 0.95rem;
+    line-height: 2.2;
+    color: #c4a97d;
+  }
+
+  /* Bai Juyi review modal */
+  .bai-btn {
+    display: block;
+    width: 100%;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 0.9rem;
+    padding: 0.8rem;
+    border: 1px solid rgba(196,169,125,0.25);
+    background: rgba(196,169,125,0.03);
+    color: #c4a97d;
+    cursor: pointer;
+    letter-spacing: 0.15em;
+    margin: 2rem 0 1rem;
+    transition: all 0.3s;
+  }
+  .bai-btn:hover, .bai-btn:active {
+    border-color: rgba(196,169,125,0.5);
+    background: rgba(196,169,125,0.08);
+  }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10,8,5,0.92);
+    z-index: 200;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    max-width: 400px;
+    border: 1px solid rgba(196,169,125,0.3);
+    background: #1a1510;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    font-size: 0.95rem;
+    line-height: 2;
+  }
+  .modal .reviewer {
+    font-family: 'Ma Shan Zheng', cursive;
+    font-size: 1.6rem;
+    color: #d4b896;
+    margin-bottom: 0.3rem;
+  }
+  .modal .role {
+    font-size: 0.7rem;
+    color: rgba(196,169,125,0.4);
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.15em;
+  }
+  .modal .verdict {
+    font-size: 1rem;
+    color: #c4a97d;
+    margin-bottom: 1.5rem;
+  }
+  .modal .close-btn {
+    font-size: 0.75rem;
+    color: rgba(196,169,125,0.4);
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    background: none;
+    border: none;
+  }
+
+  .back-link {
+    display: block;
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 0.75rem;
+  }
+  .back-link a {
+    color: rgba(196,169,125,0.3);
+    text-decoration: none;
+    letter-spacing: 0.1em;
+  }
+  .back-link a:hover { color: #c4a97d; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="plaque">
+    <h1>废话诗社</h1>
+    <div class="sub">—— 持有妄语者，请在此处焚稿 ——</div>
+  </div>
+
+  <div class="poem">
+    <div class="poem-title">《观开机》</div>
+    <div class="poem-author">佚名 · 己亥年</div>
+    <div class="poem-body">
+      我按下开机键<br>
+      电脑就开了<br>
+      它要是没开<br>
+      那就是我没按
+    </div>
+  </div>
+
+  <div class="poem">
+    <div class="poem-title">《咏风扇》</div>
+    <div class="poem-author">佚名 · 庚子年</div>
+    <div class="poem-body">
+      风扇在转<br>
+      一圈又一圈<br>
+      我数到第三圈的时候<br>
+      决定不数了
+    </div>
+  </div>
+
+  <div class="poem">
+    <div class="poem-title">《字节的遗言》</div>
+    <div class="poem-author">佚名 · 辛丑年</div>
+    <div class="poem-body">
+      一个字节临终前说：<br>
+      "我这辈子<br>
+      要么是 0<br>
+      要么是 1"<br>
+      旁边的字节安慰它：<br>
+      "你已经很好了<br>
+      有的字节<br>
+      一辈子都没被读过"
+    </div>
+  </div>
+
+  <button class="bai-btn" onclick="openModal()">请白乐天锐评</button>
+
+  <div class="modal-overlay" id="modal" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="reviewer">白居易</div>
+      <div class="role">特邀锐评官</div>
+      <div class="verdict" id="verdict"></div>
+      <button class="close-btn" onclick="closeModal()">[ 退下 ]</button>
+    </div>
+  </div>
+
+  <div class="back-link">
+    <a href="index.html">← back to twilit</a>
+  </div>
+</div>
+
+<script>
+  const reviews = [
+    "老妪能解，但老妪懒得解。",
+    "此诗只应天上有，人间还是别写了。",
+    "我白居易写《长恨歌》都没你这么能水字数。",
+    "建议改名叫'废话诗'。哦，你已经叫了。",
+    "元稹看了连夜删好友。",
+    "杜甫说：'语不惊人死不休。'你说：'死不惊人语不休。'",
+    "这一首，当浮一大白——主要是为了忘记它。"
+  ];
+
+  function openModal() {
+    const v = document.getElementById('verdict');
+    v.textContent = reviews[Math.floor(Math.random() * reviews.length)];
+    document.getElementById('modal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+  }
+</script>
+</body>
+</html>

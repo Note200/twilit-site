@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>晶体管宠物 · 2N2222 — twilit</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Serif+SC:wght@400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0a05;
+    --crt-bg: #0d1008;
+    --amber: #e8b830;
+    --amber-dim: #7a5a18;
+    --amber-bright: #f5d060;
+    --red: #c74b16;
+    --green: #4a8c3f;
+    --text: #b8b090;
+    --text-dim: #6a6040;
+    --border: rgba(232,184,48,0.2);
+    --surface: #0f1209;
+  }
+
+  body {
+    background: #060803;
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(232,184,48,0.03) 2px, rgba(232,184,48,0.03) 4px);
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .device {
+    position: relative;
+    z-index: 1;
+    max-width: 380px;
+    width: 100%;
+  }
+
+  /* ===== CRT DISPLAY ===== */
+  .crt-frame {
+    background: #0d0d08;
+    border: 3px solid #2a2a1a;
+    border-radius: 8px;
+    padding: 0.8rem;
+    box-shadow:
+      inset 0 0 30px rgba(0,0,0,0.6),
+      0 0 20px rgba(232,184,48,0.06);
+    margin-bottom: 1rem;
+    position: relative;
+  }
+
+  .crt-screen {
+    background: var(--crt-bg);
+    border: 2px solid #1a1a10;
+    border-radius: 4px;
+    padding: 1rem;
+    position: relative;
+    overflow: hidden;
+    min-height: 340px;
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
+  }
+
+  .crt-screen::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 50% 40%, rgba(232,184,48,0.04) 0%, transparent 70%);
+    pointer-events: none;
+    border-radius: 4px;
+  }
+
+  /* ===== PET CANVAS ===== */
+  #pet-canvas {
+    display: block;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+    image-rendering: pixelated;
+  }
+
+  /* ===== STATUS BARS ===== */
+  .stats {
+    position: relative;
+    z-index: 1;
+    margin-top: 0.8rem;
+  }
+
+  .stat-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+  }
+  .stat-label {
+    font-size: 0.55rem;
+    color: var(--amber-dim);
+    width: 32px;
+    text-align: right;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+  .stat-bar-track {
+    flex: 1;
+    height: 6px;
+    background: rgba(232,184,48,0.08);
+    border: 1px solid rgba(232,184,48,0.12);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .stat-bar-fill {
+    height: 100%;
+    transition: width 0.5s, background 0.5s;
+    border-radius: 2px;
+  }
+  .stat-val {
+    font-size: 0.6rem;
+    color: var(--amber-dim);
+    width: 42px;
+    flex-shrink: 0;
+    letter-spacing: 0.05em;
+  }
+
+  .fill-hfe { background: var(--amber); }
+  .fill-temp { background: var(--amber); }
+  .fill-temp.warn { background: var(--red); }
+  .fill-bias { background: var(--amber); }
+  .fill-bias.low { background: var(--amber-dim); }
+
+  /* ===== NAME / STATE ===== */
+  .pet-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+    margin-top: 0.5rem;
+    padding-top: 0.4rem;
+    border-top: 1px dashed rgba(232,184,48,0.1);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+  }
+  .pet-name { color: var(--amber-bright); }
+  .pet-state { color: var(--amber-dim); }
+  .pet-state.warning { color: var(--red); animation: blink 0.8s infinite; }
+  .pet-state.happy { color: var(--amber-bright); }
+  .pet-state.dead { color: #4a3a1a; }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ===== ACTIONS ===== */
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .action-btn {
+    font-family: 'Share Tech Mono', monospace;
+    padding: 0.7rem 0.5rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--amber);
+    cursor: pointer;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .action-btn:hover, .action-btn:active {
+    border-color: var(--amber);
+    background: rgba(232,184,48,0.06);
+    color: var(--amber-bright);
+    box-shadow: 0 0 8px rgba(232,184,48,0.1);
+  }
+  .action-btn:active { transform: scale(0.97); }
+  .action-btn .btn-icon {
+    display: block;
+    font-size: 1.1rem;
+    margin-bottom: 0.2rem;
+  }
+  .action-btn .btn-label {
+    font-size: 0.55rem;
+    color: var(--amber-dim);
+    letter-spacing: 0.06em;
+  }
+
+  /* ===== LOG ===== */
+  .log-area {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.6rem;
+    color: var(--amber-dim);
+    line-height: 1.6;
+    max-height: 80px;
+    overflow-y: auto;
+    letter-spacing: 0.05em;
+  }
+  .log-area .log-line {
+    animation: logFade 0.3s;
+  }
+  @keyframes logFade {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .back-link {
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+  }
+  .back-link a {
+    color: rgba(232,184,48,0.25);
+    text-decoration: none;
+  }
+  .back-link a:hover { color: var(--amber-dim); }
+
+  /* ===== EVOLUTION MODAL ===== */
+  .evo-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(6,8,3,0.95);
+    z-index: 300;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+  }
+  .evo-overlay.open { display: flex; }
+  .evo-card {
+    text-align: center;
+    color: var(--amber);
+    max-width: 300px;
+  }
+  .evo-card h2 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    letter-spacing: 0.2em;
+  }
+  .evo-card .evo-symbol {
+    font-size: 2rem;
+    margin: 1rem 0;
+    display: block;
+  }
+  .evo-card p {
+    font-size: 0.8rem;
+    line-height: 1.8;
+    color: var(--text);
+  }
+  .evo-card button {
+    font-family: 'Share Tech Mono', monospace;
+    margin-top: 1.5rem;
+    padding: 0.6rem 2rem;
+    border: 1px solid var(--amber);
+    background: transparent;
+    color: var(--amber);
+    cursor: pointer;
+    letter-spacing: 0.15em;
+  }
+</style>
+</head>
+<body>
+
+<div class="device">
+  <div class="crt-frame">
+    <div class="crt-screen">
+      <canvas id="pet-canvas" width="280" height="220"></canvas>
+
+      <div class="stats">
+        <div class="stat-row">
+          <span class="stat-label">hFE</span>
+          <div class="stat-bar-track"><div class="stat-bar-fill fill-hfe" id="bar-hfe"></div></div>
+          <span class="stat-val" id="val-hfe">150</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">TEMP</span>
+          <div class="stat-bar-track"><div class="stat-bar-fill fill-temp" id="bar-temp"></div></div>
+          <span class="stat-val" id="val-temp">25°C</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">BIAS</span>
+          <div class="stat-bar-track"><div class="stat-bar-fill fill-bias" id="bar-bias"></div></div>
+          <span class="stat-val" id="val-bias">0.65V</span>
+        </div>
+      </div>
+
+      <div class="pet-info">
+        <span class="pet-name">2N2222</span>
+        <span class="pet-state" id="pet-state">ACTIVE REGION</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="action-btn" onclick="action('bias')">
+      <span class="btn-icon">+V</span>
+      <span class="btn-label">偏置电压</span>
+    </button>
+    <button class="action-btn" onclick="action('signal')">
+      <span class="btn-icon">~</span>
+      <span class="btn-label">输入信号</span>
+    </button>
+    <button class="action-btn" onclick="action('cool')">
+      <span class="btn-icon">❄</span>
+      <span class="btn-label">散热</span>
+    </button>
+    <button class="action-btn" onclick="action('sleep')">
+      <span class="btn-icon">◑</span>
+      <span class="btn-label">休眠</span>
+    </button>
+  </div>
+
+  <div class="log-area" id="log"></div>
+
+  <div class="back-link"><a href="index.html">← back to twilit</a></div>
+</div>
+
+<div class="evo-overlay" id="evo-modal">
+  <div class="evo-card" id="evo-card"></div>
+</div>
+
+<script>
+// ===== PET STATE =====
+const DEFAULT_STATE = {
+  name: '2N2222',
+  type: 'NPN',
+  hfe: 150,        // current gain (0-300)
+  temp: 25,        // junction temp in °C (0-200)
+  bias: 0.65,      // V_BE in volts (0-1.0)
+  signal: 0,       // AC signal amplitude
+  sleptAt: null,   // timestamp
+  generation: 1,
+  evolution: 0,    // 0=2N2222, 1=BC547, 2=2N3055, 3=JFET
+  dead: false,
+  deadAt: null,
+  mood: 'neutral',
+  lastFed: Date.now(),
+  lastPlayed: Date.now(),
+  playCount: 0,
+  evolutionReady: false
+};
+
+const EVO_NAMES = ['2N2222', 'BC547', '2N3055', 'J201 JFET'];
+const EVO_SYMBOLS = ['⏚', '⟐', '⬡', '⏛'];
+
+let pet = loadPet();
+let animFrame = 0;
+let bounceY = 0;
+
+function loadPet() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('twilit_pet'));
+    if (saved && saved.name) return saved;
+  } catch(e) {}
+  return { ...DEFAULT_STATE };
+}
+
+function savePet() {
+  localStorage.setItem('twilit_pet', JSON.stringify(pet));
+}
+
+function resetPet() {
+  pet = { ...DEFAULT_STATE };
+  savePet();
+}
+
+// ===== TIME DECAY =====
+function applyDecay() {
+  if (pet.dead) return;
+  const now = Date.now();
+  const hoursSinceFed = (now - pet.lastFed) / 3600000;
+
+  // Bias decays over time
+  pet.bias = Math.max(0.01, 0.65 - hoursSinceFed * 0.06);
+  // Temperature slowly returns to ambient
+  if (pet.temp > 25) pet.temp = Math.max(25, pet.temp - 0.01 * (now - pet.lastFed) / 60000);
+  // hFE follows bias (below 0.3V, transistor enters cutoff → hFE drops)
+  if (pet.bias < 0.3) {
+    pet.hfe = Math.max(0, pet.hfe - hoursSinceFed * 8);
+  } else if (pet.bias > 0.9) {
+    // Saturation: hFE stays but temp rises
+    pet.temp = Math.min(200, pet.temp + hoursSinceFed * 3);
+    pet.hfe = Math.max(20, pet.hfe - hoursSinceFed * 2);
+  } else {
+    // Healthy: slow recovery
+    pet.hfe = Math.min(300, pet.hfe + hoursSinceFed * 1.5);
+  }
+
+  // Overheat damage
+  if (pet.temp > 150) pet.hfe = Math.max(0, pet.hfe - (pet.temp - 150) * 0.3);
+
+  // Death conditions
+  if (pet.hfe <= 0) killPet('ZERO GAIN');
+  if (pet.temp >= 200) killPet('THERMAL RUNAWAY');
+  if (pet.bias <= 0.01) killPet('PERMANENT CUTOFF');
+
+  // Evolution check
+  if (!pet.evolutionReady && pet.playCount >= 10 && pet.hfe > 200 && pet.temp < 60 && pet.generation === 1) {
+    pet.evolutionReady = true;
+  }
+}
+
+function killPet(cause) {
+  pet.dead = true;
+  pet.deadAt = Date.now();
+  pet.hfe = 0;
+  addLog(`[FATAL] ${cause} — 晶体管永久失效`);
+  savePet();
+}
+
+// ===== ACTIONS =====
+function action(type) {
+  applyDecay();
+  if (pet.dead) {
+    addLog('晶体管已失效。长按任意按钮 3 秒可重置。');
+    return;
+  }
+
+  const now = Date.now();
+  pet.lastFed = now;
+
+  switch(type) {
+    case 'bias':
+      pet.bias = Math.min(1.0, pet.bias + 0.12);
+      pet.hfe = Math.min(300, pet.hfe + 3);
+      pet.temp += 2;
+      pet.mood = 'fed';
+      addLog(`V_BE → ${pet.bias.toFixed(2)}V · 集电极电流上升`);
+      break;
+
+    case 'signal':
+      pet.signal = Math.min(1.0, pet.signal + 0.25);
+      pet.hfe = Math.min(300, pet.hfe + 5);
+      pet.temp += 4;
+      pet.playCount++;
+      pet.lastPlayed = now;
+      pet.mood = 'playing';
+      addLog(`AC 小信号注入 · 放大中 · 第 ${pet.playCount} 次`);
+      if (pet.evolutionReady) checkEvolution();
+      break;
+
+    case 'cool':
+      pet.temp = Math.max(25, pet.temp - 18);
+      pet.mood = 'cooling';
+      addLog(`散热片激活 · T_J → ${pet.temp.toFixed(0)}°C`);
+      break;
+
+    case 'sleep':
+      pet.sleptAt = now;
+      pet.bias = Math.max(0.1, pet.bias - 0.3);
+      pet.temp = Math.max(25, pet.temp - 10);
+      pet.signal = Math.max(0, pet.signal - 0.3);
+      pet.mood = 'sleeping';
+      addLog('基极电流拉低 · 进入休眠模式');
+      break;
+  }
+
+  updateStateDisplay();
+  savePet();
+}
+
+// ===== EVOLUTION =====
+function checkEvolution() {
+  if (pet.evolution < EVO_NAMES.length - 1) {
+    pet.evolution++;
+    pet.name = EVO_NAMES[pet.evolution];
+    pet.hfe = 150 + pet.evolution * 30;
+    pet.temp = 25;
+    pet.bias = 0.65;
+    pet.playCount = 0;
+    pet.evolutionReady = false;
+    pet.generation++;
+    showEvolution();
+  }
+}
+
+function showEvolution() {
+  document.getElementById('evo-card').innerHTML = `
+    <h2>进化</h2>
+    <span class="evo-symbol">${EVO_SYMBOLS[pet.evolution - 1]} → ${EVO_SYMBOLS[pet.evolution]}</span>
+    <p>
+      你的 ${EVO_NAMES[pet.evolution - 1]}<br>
+      在经历 ${10} 次信号注入后<br>
+      进化成了<br>
+      <strong>${pet.name}</strong>
+    </p>
+    <button onclick="closeEvolution()">确认</button>
+  `;
+  document.getElementById('evo-modal').classList.add('open');
+}
+function closeEvolution() {
+  document.getElementById('evo-modal').classList.remove('open');
+  updateStateDisplay();
+  savePet();
+}
+
+// ===== DISPLAY =====
+function updateStateDisplay() {
+  document.getElementById('bar-hfe').style.width = (pet.hfe / 300 * 100) + '%';
+  document.getElementById('val-hfe').textContent = pet.hfe.toFixed(0);
+
+  const tempPct = pet.temp / 200 * 100;
+  document.getElementById('bar-temp').style.width = tempPct + '%';
+  document.getElementById('val-temp').textContent = pet.temp.toFixed(0) + '°C';
+  document.getElementById('bar-temp').classList.toggle('warn', pet.temp > 120);
+
+  document.getElementById('bar-bias').style.width = (pet.bias * 100) + '%';
+  document.getElementById('val-bias').textContent = pet.bias.toFixed(2) + 'V';
+  document.getElementById('bar-bias').classList.toggle('low', pet.bias < 0.3);
+
+  // State label
+  const stateEl = document.getElementById('pet-state');
+  stateEl.className = 'pet-state';
+  if (pet.dead) {
+    stateEl.textContent = 'DECEASED';
+    stateEl.classList.add('dead');
+  } else if (pet.temp > 150) {
+    stateEl.textContent = 'THERMAL WARNING';
+    stateEl.classList.add('warning');
+  } else if (pet.bias < 0.2) {
+    stateEl.textContent = 'CUTOFF REGION';
+    stateEl.classList.add('warning');
+  } else if (pet.bias > 0.9) {
+    stateEl.textContent = 'SATURATION';
+    stateEl.classList.add('warning');
+  } else if (pet.mood === 'playing') {
+    stateEl.textContent = 'AMPLIFYING';
+    stateEl.classList.add('happy');
+  } else if (pet.mood === 'sleeping') {
+    stateEl.textContent = 'SLEEP MODE';
+  } else {
+    stateEl.textContent = 'ACTIVE REGION';
+  }
+
+  document.querySelector('.pet-name').textContent = pet.name;
+}
+
+// ===== LOG =====
+function addLog(msg) {
+  const log = document.getElementById('log');
+  const div = document.createElement('div');
+  div.className = 'log-line';
+  div.textContent = `> ${msg}`;
+  log.prepend(div);
+  while (log.children.length > 6) log.removeChild(log.lastChild);
+}
+
+// ===== CANVAS RENDER =====
+const canvas = document.getElementById('pet-canvas');
+const ctx = canvas.getContext('2d');
+
+function drawPet() {
+  ctx.clearRect(0, 0, 280, 220);
+
+  // Glow effect based on state
+  const glowAlpha = pet.dead ? 0 : (pet.bias < 0.3 ? 0.05 + pet.bias * 0.3 : pet.bias * 0.15);
+  const glowGrad = ctx.createRadialGradient(140, 100, 20, 140, 100, 120);
+  glowGrad.addColorStop(0, pet.temp > 120
+    ? `rgba(200,80,20,${glowAlpha})`
+    : `rgba(232,184,48,${glowAlpha})`);
+  glowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = glowGrad;
+  ctx.fillRect(0, 0, 280, 220);
+
+  ctx.save();
+  const bounce = pet.mood === 'playing' ? Math.sin(animFrame * 0.3) * 4 : 0;
+  const shake = pet.temp > 150 ? (Math.random() - 0.5) * 3 : 0;
+  ctx.translate(140 + shake, 100 + bounce);
+
+  if (pet.dead) {
+    drawDeadTransistor();
+  } else {
+    drawTransistor();
+    drawFace();
+  }
+
+  ctx.restore();
+
+  // Sweat drops if hot
+  if (pet.temp > 100 && !pet.dead) {
+    ctx.fillStyle = `rgba(232,184,48,${(pet.temp - 100) / 200})`;
+    const dropX = 155 + Math.sin(animFrame * 0.1) * 5;
+    const dropY = 135 + (animFrame % 40) * 0.3;
+    ctx.beginPath();
+    ctx.arc(dropX, dropY, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawTransistor() {
+  ctx.strokeStyle = pet.temp > 120 ? '#c74b16' : '#e8b830';
+  ctx.lineWidth = 2.5;
+  ctx.fillStyle = 'rgba(232,184,48,0.04)';
+
+  // Main body circle
+  ctx.beginPath();
+  ctx.arc(0, 0, 42, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Emitter (bottom-left)
+  ctx.beginPath();
+  ctx.moveTo(-24, 24);
+  ctx.lineTo(-42, 52);
+  ctx.stroke();
+
+  // Base (left)
+  ctx.beginPath();
+  ctx.moveTo(-42, 0);
+  ctx.lineTo(-72, 0);
+  ctx.stroke();
+
+  // Collector (top)
+  ctx.beginPath();
+  ctx.moveTo(0, -42);
+  ctx.lineTo(0, -68);
+  ctx.stroke();
+
+  // Arrow on emitter
+  ctx.fillStyle = ctx.strokeStyle;
+  ctx.beginPath();
+  ctx.moveTo(-36, 44);
+  ctx.lineTo(-30, 38);
+  ctx.lineTo(-38, 38);
+  ctx.closePath();
+  ctx.fill();
+
+  // Label
+  ctx.font = '9px "Share Tech Mono"';
+  ctx.fillStyle = ctx.strokeStyle;
+  ctx.globalAlpha = 0.7;
+  ctx.fillText('C', 6, -45);
+  ctx.fillText('B', -75, 4);
+  ctx.fillText('E', -45, 58);
+  ctx.globalAlpha = 1;
+
+  // Terminal dots
+  [{x:0,y:-68},{x:-72,y:0},{x:-42,y:52}].forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+function drawFace() {
+  const isHappy = pet.mood === 'playing';
+  const isSleeping = pet.mood === 'sleeping';
+  const isHot = pet.temp > 120;
+  const isSad = pet.bias < 0.3 || pet.hfe < 50;
+
+  ctx.fillStyle = pet.temp > 120 ? '#c74b16' : '#e8b830';
+
+  if (isSleeping) {
+    // Closed eyes (horizontal lines)
+    ctx.fillRect(-14, -8, 8, 2);
+    ctx.fillRect(6, -8, 8, 2);
+    // Open mouth (small o)
+    ctx.beginPath();
+    ctx.arc(0, 8, 3, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (isHappy) {
+    // Happy eyes (arcs)
+    ctx.beginPath();
+    ctx.arc(-10, -6, 5, Math.PI, 0);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(10, -6, 5, Math.PI, 0);
+    ctx.stroke();
+    // Smile
+    ctx.beginPath();
+    ctx.arc(0, 6, 8, 0.2, Math.PI - 0.2);
+    ctx.stroke();
+  } else if (isHot) {
+    // X eyes
+    drawX(-12, -8, 4);
+    drawX(8, -8, 4);
+    // Wavy mouth
+    ctx.beginPath();
+    ctx.moveTo(-6, 10);
+    ctx.quadraticCurveTo(0, 14, 6, 10);
+    ctx.stroke();
+  } else if (isSad) {
+    // Sad eyes
+    ctx.fillRect(-14, -8, 5, 2);
+    ctx.fillRect(9, -8, 5, 2);
+    // Frown
+    ctx.beginPath();
+    ctx.arc(0, 14, 7, Math.PI + 0.3, -0.3);
+    ctx.stroke();
+  } else {
+    // Normal eyes (dots)
+    ctx.beginPath();
+    ctx.arc(-10, -6, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(10, -6, 3, 0, Math.PI * 2);
+    ctx.fill();
+    // Neutral mouth
+    ctx.beginPath();
+    ctx.moveTo(-8, 8);
+    ctx.lineTo(8, 8);
+    ctx.stroke();
+  }
+}
+
+function drawDeadTransistor() {
+  ctx.strokeStyle = '#3a3010';
+  ctx.lineWidth = 2;
+  ctx.fillStyle = 'rgba(232,184,48,0.02)';
+
+  // Cracked circle
+  ctx.beginPath();
+  ctx.arc(0, 0, 42, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Crack line
+  ctx.beginPath();
+  ctx.moveTo(-20, -30);
+  ctx.lineTo(-10, -10);
+  ctx.lineTo(-25, 10);
+  ctx.lineTo(-5, 25);
+  ctx.stroke();
+
+  // Dead pins
+  [[-24,24,-42,52],[-42,0,-72,0],[0,-42,0,-68]].forEach(([x1,y1,x2,y2]) => {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.setLineDash([3, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  // X eyes
+  drawX(-12, -6, 4);
+  drawX(8, -6, 4);
+
+  // Dead mouth
+  ctx.beginPath();
+  ctx.arc(0, 12, 6, 0.1, Math.PI - 0.1);
+  ctx.stroke();
+}
+
+function drawX(x, y, size) {
+  ctx.fillStyle = '#3a3010';
+  ctx.beginPath();
+  ctx.moveTo(x - size, y - size);
+  ctx.lineTo(x + size, y + size);
+  ctx.moveTo(x + size, y - size);
+  ctx.lineTo(x - size, y + size);
+  ctx.stroke();
+}
+
+// ===== LONG PRESS RESET =====
+let longPressTimer = null;
+document.querySelector('.device').addEventListener('pointerdown', (e) => {
+  if (!pet.dead) return;
+  longPressTimer = setTimeout(() => {
+    resetPet();
+    updateStateDisplay();
+    addLog('[RESET] 新晶体管已就绪 · 2N2222');
+  }, 3000);
+});
+document.querySelector('.device').addEventListener('pointerup', () => {
+  clearTimeout(longPressTimer);
+});
+document.querySelector('.device').addEventListener('pointerleave', () => {
+  clearTimeout(longPressTimer);
+});
+
+// ===== MAIN LOOP =====
+function loop() {
+  animFrame++;
+  drawPet();
+  requestAnimationFrame(loop);
+}
+
+// ===== INIT =====
+applyDecay();
+updateStateDisplay();
+addLog('[BOOT] 晶体管诊断系统启动');
+addLog(`[STATUS] ${pet.name} · hFE=${pet.hfe.toFixed(0)} · T=${pet.temp.toFixed(0)}°C`);
+loop();
+
+// Periodic decay check
+setInterval(() => {
+  applyDecay();
+  updateStateDisplay();
+  savePet();
+}, 30000);
+
+// Re-apply decay on visibility change (user returns to tab)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    applyDecay();
+    updateStateDisplay();
+    savePet();
+  }
+});
+</script>
+</body>
+</html>
