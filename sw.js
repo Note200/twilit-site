@@ -3,7 +3,7 @@
 // Offline cache + install-to-home-screen ready
 // ==========================================
 
-const CACHE_NAME = 'twilit-v1';
+const CACHE_NAME = 'twilit-v2';
 
 // Assets to pre-cache on install
 const PRE_CACHE = [
@@ -29,19 +29,28 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Cache-first for static assets, network-first for plugin pages
+// Network-first for HTML navigations, cache-first for static assets
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
+  const isNavigation = event.request.mode === 'navigate';
 
   // API / data requests: network first
-  if (url.pathname.startsWith('/_api/')) {
+  if (url.pathname.startsWith('/_api/') || url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(event.request).catch(() => caches.match(event.request))
     );
     return;
   }
 
-  // Static assets & pages: cache first
+  // HTML page navigations: network first, never serve stale index.html for other pages
+  if (isNavigation || url.pathname.endsWith('.html')) {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match('/'))
+    );
+    return;
+  }
+
+  // Static assets (CSS/JS/images/fonts): cache first
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const fetchPromise = fetch(event.request).then((response) => {
