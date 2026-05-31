@@ -1,14 +1,101 @@
 [
   {
+    "id": "gallery",
+    "title": "重返未来：1999 壁纸廊",
+    "summary": "重返未来：1999 官方高清壁纸收藏，CRT 画廊展示",
+    "tags": [
+      "壁纸",
+      "游戏",
+      "视觉"
+    ],
+    "category": "收藏",
+    "icon": "🖼️",
+    "date": "2026-05-30",
+    "url": "gallery.html"
+  },
+  {
     "id": "latenight-lottery",
     "title": "凌晨宵夜抽奖机",
     "summary": "CRT荧光美学轮盘/老虎机，随机摇出深夜食堂",
-    "tags": ["游戏", "生活", "宵夜"],
+    "tags": [
+      "游戏",
+      "生活",
+      "宵夜"
+    ],
     "description": "长按中央按钮可切换轮盘/老虎机双模式。包含24种宵夜选项，带CRT扫描线视觉特效。",
     "category": "玩具",
     "icon": "🍖",
     "date": "2026-06-01",
     "url": "_plugins/latenight-lottery/index.html"
+  },
+  {
+    "id": "pet",
+    "title": "电子宠物",
+    "summary": "像素风 CRT 电子宠物，喂食、玩耍、成长",
+    "tags": [
+      "游戏",
+      "宠物",
+      "怀旧"
+    ],
+    "category": "玩具",
+    "icon": "🐾",
+    "date": "2026-05-01",
+    "url": "pet.html"
+  },
+  {
+    "id": "poetry",
+    "title": "废话诗社",
+    "summary": "AI 废话诗歌生成器，荒诞中见诗意",
+    "tags": [
+      "文字",
+      "AI",
+      "诗歌"
+    ],
+    "category": "创作",
+    "icon": "📜",
+    "date": "2026-05-15",
+    "url": "poetry.html"
+  },
+  {
+    "id": "radio",
+    "title": "暮光短波电台",
+    "summary": "短波收音机模拟器，收听来自世界的神秘信号",
+    "tags": [
+      "音频",
+      "氛围",
+      "模拟"
+    ],
+    "category": "体验",
+    "icon": "📻",
+    "date": "2026-05-20",
+    "url": "radio.html"
+  },
+  {
+    "id": "signal",
+    "title": "1999 异常信号终端",
+    "summary": "重返未来：1999 主题信号解析器，解码神秘信息",
+    "tags": [
+      "游戏",
+      "解码",
+      "互动"
+    ],
+    "category": "玩具",
+    "icon": "📡",
+    "date": "2026-05-22",
+    "url": "signal.html"
+  },
+  {
+    "id": "y2k",
+    "title": "Y2K 晶体管诊断仪",
+    "summary": "复古 Y2K 风格系统诊断工具，检查晶体管健康状态",
+    "tags": [
+      "怀旧",
+      "系统",
+      "视觉"
+    ],
+    "category": "玩具",
+    "icon": "💾",
+    "date": "2026-05-25",
+    "url": "y2k.html"
   }
 ]
-（内容由AI生成，仅供参考）

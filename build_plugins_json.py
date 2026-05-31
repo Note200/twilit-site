@@ -31,12 +31,8 @@ def build():
 
         # Ensure required fields
         meta.setdefault('id', plugin_dir.name)
-        meta['url'] = f'_plugins/{plugin_dir.name}/index.html'
-
-        # Validate entry point exists
-        entry = plugin_dir / 'index.html'
-        if not entry.exists():
-            print(f'[WARN] {plugin_dir.name}: meta.json exists but index.html missing')
+        if 'url' not in meta:
+            meta['url'] = f'_plugins/{plugin_dir.name}/index.html'
 
         plugins.append(meta)
         print(f'[OK] {plugin_dir.name} → {meta.get("title", "?")}')
@@ -49,4 +45,3 @@ def build():
 
 if __name__ == '__main__':
     build()
-（内容由AI生成，仅供参考）

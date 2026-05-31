@@ -1,0 +1,10 @@
+{
+  "id": "poetry",
+  "title": "废话诗社",
+  "summary": "AI 废话诗歌生成器，荒诞中见诗意",
+  "tags": ["文字", "AI", "诗歌"],
+  "category": "创作",
+  "icon": "📜",
+  "date": "2026-05-15",
+  "url": "poetry.html"
+}
