@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>插件画廊 — twilit</title>
+<meta name="theme-color" content="#080b10">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080b10;
+    --amber: #c9a96e;
+    --amber-dim: #7a6543;
+    --text: #b8b4a8;
+    --text-dim: #6b6760;
+    --card-bg: #0d1119;
+    --border: rgba(201,169,110,0.12);
+    --green: #5a8a4a;
+    --green-bright: #7dff5a;
+  }
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html { font-size:16px; -webkit-text-size-adjust:100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Serif SC', serif;
+    min-height: 100vh;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(201,169,110,0.03) 2px, rgba(201,169,110,0.03) 4px);
+    pointer-events: none; z-index: 100;
+  }
+  body::after {
+    content: ''; position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.5) 100%);
+    pointer-events: none; z-index: 99;
+  }
+
+  .app { max-width:900px; margin:0 auto; padding:0 20px; position:relative; z-index:1; }
+
+  /* Nav */
+  .nav { display:flex; justify-content:space-between; align-items:center; padding:24px 0; }
+  .nav .brand { font-size:1.1rem; font-weight:600; color:var(--amber); text-decoration:none; letter-spacing:2px; text-shadow:0 0 10px rgba(201,169,110,0.3); }
+  .nav .back { font-size:0.8rem; color:var(--text-dim); text-decoration:none; letter-spacing:1px; transition:color 0.2s; }
+  .nav .back:hover { color:var(--amber); }
+
+  /* Hero */
+  .hero { text-align:center; padding:20px 0 36px; }
+  .hero h1 { font-size:clamp(20px,5vw,28px); font-weight:600; color:var(--amber); letter-spacing:4px; text-shadow:0 0 10px rgba(201,169,110,0.3); margin-bottom:8px; }
+  .hero .sub { font-size:0.7rem; color:var(--text-dim); letter-spacing:2px; font-family:'Space Mono',monospace; }
+  .hero .stats { font-size:0.65rem; color:var(--amber-dim); margin-top:12px; letter-spacing:1px; }
+
+  /* Toolbar */
+  .toolbar { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-bottom:28px; }
+  .toolbar input {
+    flex:1; min-width:180px; padding:10px 14px; font-family:'Noto Serif SC',serif; font-size:0.85rem;
+    color:var(--text); background:rgba(0,0,0,0.5); border:1px solid var(--border); border-radius:6px; outline:none;
+    transition:border-color 0.2s;
+  }
+  .toolbar input:focus { border-color:var(--amber); }
+  .toolbar input::placeholder { color:var(--text-dim); }
+  .toolbar select {
+    padding:10px 12px; font-family:'Noto Serif SC',serif; font-size:0.8rem; color:var(--amber);
+    background:rgba(0,0,0,0.5); border:1px solid var(--border); border-radius:6px; outline:none; cursor:pointer;
+    -webkit-appearance:none; appearance:none; min-width:110px;
+  }
+
+  /* Tags */
+  .tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:24px; }
+  .tag {
+    display:inline-block; padding:3px 10px; font-size:0.65rem; color:var(--green);
+    border:1px solid rgba(90,138,74,0.3); border-radius:4px; letter-spacing:1px; cursor:pointer;
+    transition:all 0.2s; -webkit-tap-highlight-color:transparent;
+  }
+  .tag:hover, .tag.active { color:var(--green-bright); border-color:var(--green-bright); background:rgba(125,255,90,0.06); }
+
+  /* Grid */
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; }
+  .card {
+    background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:20px;
+    display:flex; flex-direction:column; gap:8px; text-decoration:none; color:inherit;
+    transition:border-color 0.25s,box-shadow 0.25s; cursor:pointer;
+  }
+  .card:hover { border-color:var(--amber); box-shadow:0 0 18px rgba(201,169,110,0.1); }
+  .card .icon { font-size:1.8rem; }
+  .card .title { font-size:0.95rem; font-weight:600; color:var(--amber); letter-spacing:1px; }
+  .card .summary { font-size:0.7rem; color:var(--text-dim); line-height:1.6; flex:1; }
+  .card .meta { display:flex; flex-wrap:wrap; gap:4px; }
+  .card .date { font-size:0.6rem; color:rgba(90,138,74,0.6); font-family:'Space Mono',monospace; margin-top:auto; }
+
+  .empty { grid-column:1/-1; text-align:center; padding:60px 20px; }
+  .empty .icon { font-size:2.5rem; opacity:0.4; margin-bottom:12px; }
+  .empty .text { font-size:0.8rem; color:var(--text-dim); letter-spacing:2px; }
+
+  footer { text-align:center; padding:48px 0 24px; font-size:0.6rem; color:var(--text-dim); letter-spacing:1px; font-family:'Space Mono',monospace; }
+
+  ::selection { background:rgba(201,169,110,0.25); color:#fff; }
+
+  @media (max-width:500px) {
+    .grid { grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; }
+    .card { padding:14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <nav class="nav">
+    <a class="brand" href="/">twilit</a>
+    <a class="back" href="/">← 返回</a>
+  </nav>
+
+  <div class="hero">
+    <h1>插件画廊</h1>
+    <div class="sub">PLUGIN GALLERY</div>
+    <div class="stats" id="stats">加载中…</div>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="搜索插件…" autocomplete="off">
+    <select id="sort">
+      <option value="date-desc">最新</option>
+      <option value="date-asc">最早</option>
+      <option value="title">名称</option>
+      <option value="category">分类</option>
+    </select>
+  </div>
+
+  <div class="tags" id="tagCloud"></div>
+  <div class="grid" id="grid"></div>
+
+  <footer>twilit.site · Plugin Gallery · CRT Design System</footer>
+</div>
+
+<script>
+let plugins=[],activeTags=new Set(),query='',sortBy='date-desc';
+
+(async()=>{
+  try{
+    const r=await fetch('/_data/plugins.json');
+    plugins=await r.json();
+  }catch(e){document.getElementById('grid').innerHTML='<div class="empty"><div class="icon">&#9881;</div><div class="text">清单加载失败</div></div>';return;}
+  loadURL();
+  render();
+})();
+
+function allTags(){
+  const m=new Map();
+  plugins.forEach(p=>(p.tags||[]).forEach(t=>m.set(t,(m.get(t)||0)+1)));
+  return [...m.entries()].sort((a,b)=>b[1]-a[1]);
+}
+
+function filtered(){
+  let r=[...plugins];
+  if(query.trim()){
+    const q=query.trim().toLowerCase();
+    r=r.filter(p=>p.title.toLowerCase().includes(q)||(p.summary||'').toLowerCase().includes(q)||(p.tags||[]).some(t=>t.toLowerCase().includes(q)));
+  }
+  if(activeTags.size>0) r=r.filter(p=>[...activeTags].every(t=>(p.tags||[]).includes(t)));
+  switch(sortBy){
+    case'date-asc':r.sort((a,b)=>(a.date||'').localeCompare(b.date||''));break;
+    case'date-desc':r.sort((a,b)=>(b.date||'').localeCompare(a.date||''));break;
+    case'title':r.sort((a,b)=>a.title.localeCompare(b.title,'zh-CN'));break;
+    case'category':r.sort((a,b)=>(a.category||'').localeCompare(b.category||'','zh-CN'));break;
+  }
+  return r;
+}
+
+function render(){
+  document.getElementById('tagCloud').innerHTML=allTags().map(([t,n])=>{
+    const c=activeTags.has(t)?' active':'';
+    return `<span class="tag${c}" data-tag="${e(t)}">${e(t)} <span style="opacity:0.5">${n}</span></span>`;
+  }).join('');
+  const list=filtered();
+  const g=document.getElementById('grid');
+  if(!list.length){g.innerHTML='<div class="empty"><div class="icon">&#128269;</div><div class="text">无匹配</div></div>';}else{
+    g.innerHTML=list.map(p=>`<a class="card" href="${e(p.url)}"><div class="icon">${e(p.icon||'')}</div><div class="title">${e(p.title)}</div><div class="summary">${e(p.summary||'')}</div><div class="meta">${(p.tags||[]).slice(0,5).map(t=>`<span class="tag">${e(t)}</span>`).join('')}</div><div class="date">${e(p.date||'')} / ${e(p.category||'')}</div></a>`).join('');
+  }
+  document.getElementById('stats').textContent=`${plugins.length} 插件 · ${allTags().length} 标签`;
+}
+
+function e(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function u(){const p=new URLSearchParams();if(query.trim())p.set('q',query.trim());if(activeTags.size>0)p.set('tags',[...activeTags].join(','));if(sortBy!=='date-desc')p.set('sort',sortBy);history.replaceState(null,'',p.toString()?'?'+p.toString():location.pathname);}
+function loadURL(){const p=new URLSearchParams(location.search);query=p.get('q')||'';document.getElementById('search').value=query;const t=p.get('tags');if(t)activeTags=new Set(t.split(',').filter(Boolean));sortBy=p.get('sort')||'date-desc';document.getElementById('sort').value=sortBy;}
+
+document.getElementById('search').addEventListener('input',e=>{query=e.target.value;activeTags.clear();render();u();});
+document.getElementById('sort').addEventListener('change',e=>{sortBy=e.target.value;render();u();});
+document.getElementById('tagCloud').addEventListener('click',e=>{
+  const el=e.target.closest('.tag');if(!el)return;
+  const t=el.dataset.tag;
+  activeTags.has(t)?activeTags.delete(t):activeTags.add(t);
+  document.getElementById('search').value='';query='';render();u();
+});
+
+if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+</script>
+</body>
+</html>

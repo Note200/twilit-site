@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>凌晨宵夜抽奖机</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap');
+
+  :root {
+    --bg: #0a0c0a;
+    --crt-bg: #0d100d;
+    --amber: #c9a96e;
+    --amber-dim: #8a7040;
+    --green: #5a8a4a;
+    --green-bright: #7dff5a;
+    --red: #c94a4a;
+    --scanline: rgba(0,0,0,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Noto Sans SC', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* CRT overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      var(--scanline) 0px,
+      var(--scanline) 2px,
+      transparent 2px,
+      transparent 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.5) 100%);
+    pointer-events: none;
+    z-index: 99;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+  }
+
+  .title {
+    font-size: clamp(20px, 5vw, 28px);
+    font-weight: 900;
+    color: var(--amber);
+    text-shadow: 0 0 10px var(--amber-dim), 0 0 30px rgba(201,169,110,0.3);
+    letter-spacing: 4px;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    font-size: 12px;
+    color: var(--green);
+    opacity: 0.7;
+    letter-spacing: 2px;
+    text-shadow: 0 0 4px var(--green);
+  }
+
+  .time-display {
+    font-size: 11px;
+    color: var(--amber-dim);
+    letter-spacing: 1px;
+    margin-top: 2px;
+    font-family: monospace;
+  }
+
+  /* Gacha machine body */
+  .machine {
+    position: relative;
+    width: 320px;
+    height: 320px;
+  }
+
+  /* Rotating ring - roulette */
+  .roulette-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 4px solid var(--amber-dim);
+    box-shadow: 0 0 20px rgba(201,169,110,0.15), inset 0 0 30px rgba(0,0,0,0.4);
+    transition: transform 0.6s cubic-bezier(0.15, 0.85, 0.35, 1.0);
+  }
+
+  .roulette-ring.spinning {
+    transition: transform 3.5s cubic-bezier(0.05, 0.75, 0.2, 0.98);
+  }
+
+  .roulette-ring.hit {
+    border-color: var(--green-bright);
+    box-shadow: 0 0 40px rgba(125,255,90,0.4), inset 0 0 30px rgba(0,0,0,0.4);
+  }
+
+  /* Sectors */
+  .sector {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 50%;
+    height: 50%;
+    transform-origin: 0% 0%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 8px;
+  }
+
+  .sector-label {
+    font-size: 10px;
+    color: var(--amber);
+    text-shadow: 0 0 3px var(--amber-dim);
+    letter-spacing: 1px;
+    transform: rotate(12deg);
+    white-space: nowrap;
+  }
+
+  /* Pointer/indicator */
+  .pointer {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+  }
+
+  .pointer-arrow {
+    width: 0;
+    height: 0;
+    border-left: 13px solid transparent;
+    border-right: 13px solid transparent;
+    border-top: 20px solid var(--red);
+    filter: drop-shadow(0 0 6px rgba(201,74,74,0.6));
+  }
+
+  .pointer-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--red);
+    border-radius: 50%;
+    margin: 4px auto 0;
+    box-shadow: 0 0 8px var(--red);
+  }
+
+  /* Center capsule area */
+  .center-capsule {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90px;
+    height: 90px;
+    background: radial-gradient(circle at 40% 35%, #2a2a2a, #0a0a0a);
+    border-radius: 50%;
+    border: 3px solid var(--amber-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.6), 0 0 15px rgba(201,169,110,0.1);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .center-capsule:active {
+    transform: translate(-50%, -50%) scale(0.94);
+  }
+
+  .center-capsule:hover {
+    border-color: var(--amber);
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.6), 0 0 25px rgba(201,169,110,0.25);
+  }
+
+  .capsule-text {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--amber);
+    text-align: center;
+    line-height: 1.3;
+    text-shadow: 0 0 4px var(--amber-dim);
+    letter-spacing: 1px;
+  }
+
+  .capsule-text .go {
+    font-size: 18px;
+    display: block;
+    letter-spacing: 3px;
+  }
+
+  /* Result display */
+  .result-area {
+    width: 100%;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .result-card {
+    background: rgba(10,12,10,0.9);
+    border: 2px solid var(--amber-dim);
+    border-radius: 8px;
+    padding: 16px 24px;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.4s cubic-bezier(0.15, 0.85, 0.35, 1.0);
+    box-shadow: 0 0 15px rgba(201,169,110,0.1);
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .result-card.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .result-card.highlight {
+    border-color: var(--green-bright);
+    box-shadow: 0 0 25px rgba(125,255,90,0.25);
+    animation: flicker 0.1s 3;
+  }
+
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  .result-icon {
+    font-size: 32px;
+    margin-bottom: 6px;
+  }
+
+  .result-food {
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--amber);
+    letter-spacing: 3px;
+    text-shadow: 0 0 8px var(--amber-dim);
+  }
+
+  .result-detail {
+    font-size: 12px;
+    color: var(--green);
+    margin-top: 4px;
+    opacity: 0.7;
+  }
+
+  /* History strip */
+  .history-strip {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 320px;
+  }
+
+  .history-item {
+    font-size: 10px;
+    color: var(--green);
+    opacity: 0.5;
+    border: 1px solid rgba(90,138,74,0.3);
+    border-radius: 4px;
+    padding: 3px 8px;
+    letter-spacing: 1px;
+  }
+
+  /* Capsule drop animation */
+  .capsule-drop {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 150;
+    pointer-events: none;
+    animation: dropAndFade 1.2s ease-in forwards;
+  }
+
+  .capsule-drop .drop-char {
+    display: inline-block;
+    font-size: 24px;
+    color: var(--amber);
+    text-shadow: 0 0 12px var(--amber);
+    animation: tumble 1.2s ease-in forwards;
+  }
+
+  @keyframes dropAndFade {
+    0% { opacity: 0; transform: translate(-50%, -100%); }
+    15% { opacity: 1; }
+    70% { opacity: 1; transform: translate(-50%, 150%); }
+    100% { opacity: 0; transform: translate(-50%, 200%); }
+  }
+
+  @keyframes tumble {
+    0% { transform: rotate(0deg) scale(0.5); }
+    40% { transform: rotate(360deg) scale(1.2); }
+    70% { transform: rotate(720deg) scale(1); }
+    100% { transform: rotate(900deg) scale(0.3); }
+  }
+
+  /* Slot machine variant styles */
+  .slot-mode .roulette-ring { display: none; }
+  .slot-mode .pointer { display: none; }
+
+  .mode-toggle {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 10px;
+    color: var(--green);
+    opacity: 0.6;
+    cursor: pointer;
+    letter-spacing: 1px;
+    z-index: 10;
+    padding: 4px 8px;
+    border: 1px solid rgba(90,138,74,0.3);
+    border-radius: 4px;
+  }
+
+  /* Slot reels */
+  .slot-reels {
+    display: none;
+  }
+  .slot-mode .slot-reels {
+    display: flex;
+    gap: 6px;
+    position: absolute;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .reel {
+    width: 80px;
+    height: 200px;
+    background: rgba(0,0,0,0.8);
+    border: 2px solid var(--amber-dim);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 10px rgba(201,169,110,0.1);
+  }
+
+  .reel-inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 2.5s cubic-bezier(0.1, 0.8, 0.2, 1);
+  }
+
+  .reel-item {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--amber);
+    text-shadow: 0 0 3px var(--amber-dim);
+    letter-spacing: 2px;
+    flex-shrink: 0;
+  }
+
+  .reel::before,
+  .reel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .reel::before {
+    background: linear-gradient(to bottom, rgba(10,12,10,0.95), transparent 30%, transparent 70%, rgba(10,12,10,0.95));
+  }
+  .reel::after {
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 48px;
+    transform: translateY(-50%);
+    border-top: 1px solid var(--green-bright);
+    border-bottom: 1px solid var(--green-bright);
+    box-shadow: 0 0 8px rgba(125,255,90,0.3), inset 0 0 5px rgba(125,255,90,0.1);
+  }
+
+  @media (max-width: 360px) {
+    .machine { width: 280px; height: 280px; }
+    .center-capsule { width: 75px; height: 75px; }
+    .capsule-text { font-size: 11px; }
+    .capsule-text .go { font-size: 15px; }
+    .reel { width: 65px; height: 160px; }
+    .reel-item { height: 40px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="title">深夜食堂抽选</div>
+    <div class="subtitle">MIDNIGHT CANTEEN GACHA</div>
+    <div class="time-display" id="timeDisplay">--:--</div>
+  </div>
+
+  <div class="machine" id="machine">
+    <!-- Roulette mode -->
+    <div class="roulette-ring" id="rouletteRing"></div>
+    <div class="pointer">
+      <div class="pointer-arrow"></div>
+      <div class="pointer-dot"></div>
+    </div>
+
+    <!-- Slot mode (hidden by default) -->
+    <div class="slot-reels" id="slotReels">
+      <div class="reel" id="reel1"><div class="reel-inner"></div></div>
+      <div class="reel" id="reel2"><div class="reel-inner"></div></div>
+      <div class="reel" id="reel3"><div class="reel-inner"></div></div>
+    </div>
+
+    <div class="center-capsule" id="centerBtn">
+      <div class="capsule-text">
+        <span class="go">GO</span>
+        扭一个
+      </div>
+    </div>
+  </div>
+
+  <div class="result-area">
+    <div class="result-card" id="resultCard">
+      <div class="result-icon" id="resultIcon"></div>
+      <div class="result-food" id="resultFood"></div>
+      <div class="result-detail" id="resultDetail"></div>
+    </div>
+  </div>
+
+  <div class="history-strip" id="historyStrip"></div>
+</div>
+
+<script>
+// ====================== DATA ======================
+const foodPool = [
+  { name: '烧烤', icon: '🍖', detail: '炭火炙烤，油脂滴落的声音' },
+  { name: '小龙虾', icon: '🦞', detail: '麻辣 / 蒜蓉 / 十三香，手套已备好' },
+  { name: '螺蛳粉', icon: '🍜', detail: '酸笋的召唤，深夜的灵魂暴击' },
+  { name: '炸鸡', icon: '🍗', detail: '酥脆外皮，配冰可乐最佳' },
+  { name: '泡面', icon: '🍜', detail: '加个蛋，加根肠，豪华版' },
+  { name: '麻辣烫', icon: '🥘', detail: '自选食材，汤底浓郁' },
+  { name: '煎饼果子', icon: '🥞', detail: '薄脆+鸡蛋+甜面酱，路边摊王者' },
+  { name: '烤冷面', icon: '🍳', detail: '东北街头第一夜宵' },
+  { name: '关东煮', icon: '🍢', detail: '热汤里的鱼丸和萝卜，暖胃首选' },
+  { name: '炒米粉', icon: '🍝', detail: '大火爆炒，锅气十足' },
+  { name: '馄饨', icon: '🥟', detail: '薄皮大馅，紫菜虾皮汤底' },
+  { name: '章鱼烧', icon: '🐙', detail: '木鱼花跳舞，外酥里嫩' },
+  { name: '卤味', icon: '🦆', detail: '鸭脖鸭翅藕片豆干，下酒神器' },
+  { name: '手抓饼', icon: '🫓', detail: '加培根加芝士，层层酥脆' },
+  { name: '凉皮', icon: '🍲', detail: '夏天吃清爽，冬天吃解腻' },
+  { name: '砂锅粥', icon: '🥣', detail: '生滚粥底，暖到胃里' },
+  { name: '臭豆腐', icon: '🧈', detail: '闻着臭吃着香，配剁椒绝了' },
+  { name: '酸辣粉', icon: '🌶️', detail: '红薯粉+醋+辣椒，酸爽开胃' },
+  { name: '鸡蛋灌饼', icon: '🥚', detail: '灌进去的鸡蛋，饼比脸大' },
+  { name: '糖水', icon: '🍧', detail: '双皮奶/杨枝甘露/红豆沙，甜党集合' },
+  { name: '肉夹馍', icon: '🥙', detail: '腊汁肉+白吉馍，西安灵魂' },
+  { name: '锅贴', icon: '🥟', detail: '底部焦脆，肉馅多汁' },
+  { name: '烤红薯', icon: '🍠', detail: '冬天捧在手里的温暖' },
+  { name: '部队锅', icon: '🍲', detail: '拉面+年糕+午餐肉，韩式满足' },
+];
+
+const history = [];
+const MAX_HISTORY = 6;
+
+// ====================== DOM ======================
+const rouletteRing = document.getElementById('rouletteRing');
+const centerBtn = document.getElementById('centerBtn');
+const resultCard = document.getElementById('resultCard');
+const resultIcon = document.getElementById('resultIcon');
+const resultFood = document.getElementById('resultFood');
+const resultDetail = document.getElementById('resultDetail');
+const historyStrip = document.getElementById('historyStrip');
+const timeDisplay = document.getElementById('timeDisplay');
+const slotReels = document.getElementById('slotReels');
+
+let isSpinning = false;
+let isSlotMode = false;
+const sectorCount = foodPool.length;
+const sectorAngle = 360 / sectorCount;
+
+// ====================== BUILD ROULETTE SECTORS ======================
+function buildSectors() {
+  rouletteRing.innerHTML = '';
+  foodPool.forEach((food, i) => {
+    const sector = document.createElement('div');
+    sector.className = 'sector';
+    sector.style.transform = `rotate(${i * sectorAngle}deg)`;
+    const label = document.createElement('span');
+    label.className = 'sector-label';
+    label.textContent = food.icon;
+    sector.appendChild(label);
+    rouletteRing.appendChild(sector);
+  });
+}
+
+// ====================== BUILD SLOT REELS ======================
+function buildReels() {
+  [1, 2, 3].forEach(n => {
+    const reel = document.getElementById(`reel${n}`);
+    const inner = reel.querySelector('.reel-inner');
+    inner.innerHTML = '';
+    // Fill with many items for scrolling effect
+    const items = [];
+    for (let i = 0; i < 20; i++) {
+      const f = foodPool[Math.floor(Math.random() * foodPool.length)];
+      items.push(f);
+    }
+    items.forEach(f => {
+      const div = document.createElement('div');
+      div.className = 'reel-item';
+      div.textContent = f.icon + ' ' + f.name;
+      inner.appendChild(div);
+    });
+  });
+}
+
+// ====================== TIME DISPLAY ======================
+function updateTime() {
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2, '0');
+  const m = now.getMinutes().toString().padStart(2, '0');
+  const s = now.getSeconds().toString().padStart(2, '0');
+  timeDisplay.textContent = `${h}:${m}:${s} — ${h >= 22 || h < 5 ? '宵夜时间' : h < 7 ? '早餐还早' : '先存着'}`;
+}
+setInterval(updateTime, 1000);
+updateTime();
+
+// ====================== SPIN ======================
+function spinRoulette() {
+  if (isSpinning) return;
+  isSpinning = true;
+
+  // Hide previous result
+  resultCard.classList.remove('show', 'highlight');
+  rouletteRing.classList.remove('hit');
+
+  // Calculate random result first
+  const chosenIndex = Math.floor(Math.random() * foodPool.length);
+  // Each sector spans sectorAngle degrees. We want the pointer at the center of the chosen sector.
+  // Pointer is at top (0° = -90° from standard math). Sectors start at 0°.
+  // Sector i occupies [i * sectorAngle, (i+1) * sectorAngle].
+  // For pointer to land on sector i, we rotate the ring by: -(i * sectorAngle + sectorAngle/2)
+  const targetAngle = -(chosenIndex * sectorAngle + sectorAngle / 2);
+
+  // Current rotation (accumulated)
+  const currentRotation = parseFloat(rouletteRing.dataset.rotation || '0');
+  // Add multiple full spins + target
+  const spins = 5 + Math.floor(Math.random() * 3);
+  const totalRotation = currentRotation - (currentRotation % 360) + spins * 360 + targetAngle;
+
+  rouletteRing.dataset.rotation = totalRotation;
+  rouletteRing.dataset.chosenIndex = chosenIndex;
+
+  rouletteRing.classList.add('spinning');
+  rouletteRing.style.transform = `rotate(${totalRotation}deg)`;
+
+  // Show result after animation
+  setTimeout(() => {
+    rouletteRing.classList.remove('spinning');
+    rouletteRing.classList.add('hit');
+    showResult(chosenIndex);
+    isSpinning = false;
+  }, 3600);
+}
+
+function spinSlot() {
+  if (isSpinning) return;
+  isSpinning = true;
+
+  resultCard.classList.remove('show', 'highlight');
+  rouletteRing.classList.remove('hit');
+
+  const chosenIndex = Math.floor(Math.random() * foodPool.length);
+  const chosen = foodPool[chosenIndex];
+
+  [1, 2, 3].forEach(n => {
+    const reelEl = document.getElementById(`reel${n}`);
+    const inner = reelEl.querySelector('.reel-inner');
+
+    // Refresh random items
+    const items = [];
+    for (let i = 0; i < 20; i++) {
+      items.push(foodPool[Math.floor(Math.random() * foodPool.length)]);
+    }
+    // Make last visible item the chosen one (position at center of visible area)
+    items[items.length - 3] = chosen; // position in middle of visible area
+
+    inner.innerHTML = '';
+    items.forEach(f => {
+      const div = document.createElement('div');
+      div.className = 'reel-item';
+      div.textContent = f.icon + ' ' + f.name;
+      inner.appendChild(div);
+    });
+
+    // Calculate scroll: each item is 48px, we want item at index items.length-3 to be centered
+    const targetPos = -(items.length - 3) * 48;
+    const randomJitter = (Math.random() - 0.5) * 100;
+
+    inner.style.transition = 'none';
+    inner.style.transform = 'translateY(0)';
+    inner.offsetHeight;
+    inner.style.transition = `transform ${2 + n * 0.3}s cubic-bezier(0.1, 0.8, 0.2, 1)`;
+    inner.style.transform = `translateY(${targetPos + randomJitter}px)`;
+  });
+
+  // Show result after longest reel stops
+  setTimeout(() => {
+    showResult(chosenIndex);
+    isSpinning = false;
+  }, 2800);
+}
+
+// ====================== SHOW RESULT ======================
+function showResult(index) {
+  const food = foodPool[index];
+  resultIcon.textContent = food.icon;
+  resultFood.textContent = food.name;
+  resultDetail.textContent = food.detail;
+  resultCard.classList.add('show', 'highlight');
+
+  // Add to history
+  history.unshift(food);
+  if (history.length > MAX_HISTORY) history.pop();
+  renderHistory();
+
+  // Capsule drop animation
+  spawnCapsuleDrop(food.icon);
+}
+
+function spawnCapsuleDrop(icon) {
+  const el = document.createElement('div');
+  el.className = 'capsule-drop';
+  const span = document.createElement('span');
+  span.className = 'drop-char';
+  span.textContent = icon;
+  el.appendChild(span);
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1300);
+}
+
+function renderHistory() {
+  historyStrip.innerHTML = history.map(f =>
+    `<span class="history-item">${f.icon} ${f.name}</span>`
+  ).join('');
+}
+
+// ====================== INIT ======================
+buildSectors();
+buildReels();
+
+// Default: roulette mode, show ring + pointer
+slotReels.style.display = 'none';
+
+centerBtn.addEventListener('click', () => {
+  if (isSpinning) return;
+  if (isSlotMode) {
+    spinSlot();
+  } else {
+    spinRoulette();
+  }
+});
+
+// Long press to toggle mode
+let longPressTimer;
+centerBtn.addEventListener('touchstart', (e) => {
+  longPressTimer = setTimeout(() => {
+    isSlotMode = !isSlotMode;
+    toggleMode();
+    // brief visual feedback
+    centerBtn.style.borderColor = 'var(--green-bright)';
+    setTimeout(() => { centerBtn.style.borderColor = 'var(--amber-dim)'; }, 300);
+  }, 600);
+});
+centerBtn.addEventListener('touchend', () => clearTimeout(longPressTimer));
+centerBtn.addEventListener('touchmove', () => clearTimeout(longPressTimer));
+
+// Also allow mouse long press for desktop
+centerBtn.addEventListener('mousedown', (e) => {
+  longPressTimer = setTimeout(() => {
+    isSlotMode = !isSlotMode;
+    toggleMode();
+    centerBtn.style.borderColor = 'var(--green-bright)';
+    setTimeout(() => { centerBtn.style.borderColor = 'var(--amber-dim)'; }, 300);
+  }, 600);
+});
+centerBtn.addEventListener('mouseup', () => clearTimeout(longPressTimer));
+centerBtn.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
+
+function toggleMode() {
+  if (isSlotMode) {
+    rouletteRing.style.display = 'none';
+    document.querySelector('.pointer').style.display = 'none';
+    slotReels.style.display = 'flex';
+    buildReels();
+    document.querySelector('.subtitle').textContent = 'SLOT MACHINE MODE';
+  } else {
+    rouletteRing.style.display = '';
+    document.querySelector('.pointer').style.display = '';
+    slotReels.style.display = 'none';
+    document.querySelector('.subtitle').textContent = 'MIDNIGHT CANTEEN GACHA';
+  }
+}
+</script>
+
+</body>
+</html>
