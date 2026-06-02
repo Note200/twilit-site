@@ -797,9 +797,15 @@
     var pentatonic = [130.81, 146.83, 164.81, 196, 220, 261.63, 293.66, 329.63, 392, 440];
 
     function initAudio() {
-      if (audioCtx) return;
+      if (audioCtx) {
+        // iOS Safari: resume suspended context on user gesture
+        if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+        return;
+      }
       try {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // iOS Safari starts AudioContext in suspended state — must resume explicitly
+        if (audioCtx.state === 'suspended') { audioCtx.resume(); }
       } catch(e) { return; }
       masterGain = audioCtx.createGain();
       masterGain.gain.value = 0.06;
