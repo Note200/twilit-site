@@ -537,6 +537,144 @@
     50%      { opacity: 1;    box-shadow: 0 0 8px rgba(201,169,110,0.5); }
   }
 
+
+  /* ================================================
+     [DESKTOP] Responsive layout for larger screens
+     ================================================ */
+  @media (min-width: 768px) {
+
+    .container {
+      max-width: 900px;
+      padding: 4rem 2.5rem 5rem;
+    }
+
+    /* -- Hero: bigger and more breathing room -- */
+    .hero {
+      padding-top: 3.5rem;
+    }
+    .domain {
+      font-size: 1rem;
+      letter-spacing: 0.2em;
+    }
+    .motto {
+      font-size: 2.8rem;
+      letter-spacing: 0.3em;
+    }
+    .motto-sub {
+      font-size: 1.05rem;
+    }
+    .name {
+      font-size: 1.3rem;
+    }
+
+    /* -- Two-column content grid -- */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    /* -- Bio: nicer reading width -- */
+    .bio {
+      font-size: 1rem;
+      line-height: 2.2;
+      max-width: 34em;
+    }
+
+    /* -- Projects: 2-column grid with bigger cards -- */
+    .projects {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    /* inside content-grid (side-by-side layout), keep single column */
+    .content-grid .projects {
+      grid-template-columns: 1fr;
+    }
+    .project-card {
+      padding: 1.2rem 1.4rem;
+      min-height: 72px;
+    }
+    .project-name {
+      font-size: 1.05rem;
+    }
+    .project-desc {
+      font-size: 0.82rem;
+    }
+
+    /* -- GitHub repos: 2-column grid -- */
+    .repo-card {
+      padding: 1.2rem 1.4rem;
+    }
+
+    /* -- Stack tags: more spaced -- */
+    .tags {
+      gap: 0.7rem;
+    }
+    .tag {
+      font-size: 0.75rem;
+      padding: 0.4rem 0.9rem;
+    }
+
+    /* -- Guestbook: wider, side-by-side on desktop -- */
+    .guestbook-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-areas:
+        "name   msg"
+        "status btn";
+      gap: 0.8rem 1rem;
+      align-items: start;
+    }
+    .gb-textarea { grid-area: msg; min-height: 80px; }
+    #gb-name { grid-area: name; }
+    .gb-status { grid-area: status; }
+    .gb-btn { grid-area: btn; justify-self: end; align-self: end; }
+
+    .gb-messages {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+      max-height: 400px;
+    }
+
+    /* -- Divider wider -- */
+    .divider {
+      width: 80px;
+      margin: 3rem auto;
+    }
+
+    /* -- Sections more spacing -- */
+    .section {
+      margin-bottom: 3.5rem;
+    }
+    .section-title {
+      font-size: 0.78rem;
+    }
+
+    /* -- Footer larger -- */
+    .footer {
+      font-size: 0.8rem;
+      margin-top: 4rem;
+    }
+
+    /* -- Side ornament: subtle left/right CRT brackets -- */
+    .container::before,
+    .container::after {
+      content: '';
+      position: absolute;
+      top: 4rem;
+      width: 1px;
+      height: 120px;
+      background: linear-gradient(to bottom, transparent, var(--twilight-dim), transparent);
+      opacity: 0.3;
+    }
+    .container::before { left: -1.5rem; }
+    .container::after  { right: -1.5rem; }
+
+  }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -573,74 +711,78 @@
 
   <div class="divider"></div>
 
-  <!-- Bio -->
-  <section class="section">
-    <div class="section-title">· about ·</div>
-    <p class="bio">
-      Born in winter 2005. Write code at dusk.<br>
-      Favor the space between light and shadow —<br>
-      CRT phosphor on black glass, amber on obsidian.<br>
-      System programming, embedded rust,<br>
-      and the quiet conviction that<br>
-      a single line can change the world.
-    </p>
-  </section>
+  <div class="content-grid">
 
-  <!-- Projects -->
-  <section class="section">
-    <div class="section-title">· projects ·</div>
-    <div class="projects">
-      <a href="y2k.html" class="project-card">
-        <div>
-          <div class="project-name">Y2K 晶体管诊断仪</div>
-          <div class="project-desc">琥珀 CRT · 故障诊断台</div>
-        </div>
-        <span class="project-arrow">→</span>
-      </a>
-      <a href="signal.html" class="project-card">
-        <div>
-          <div class="project-name">1999 异常信号终端</div>
-          <div class="project-desc">灰绿 CRT · ARG 叙事</div>
-        </div>
-        <span class="project-arrow">→</span>
-      </a>
-      <a href="poetry.html" class="project-card">
-        <div>
-          <div class="project-name">废话诗社</div>
-          <div class="project-desc">白居易锐评 · 荒诞诗歌</div>
-        </div>
-        <span class="project-arrow">→</span>
-      </a>
-      <a href="radio.html" class="project-card">
-        <div>
-          <div class="project-name">暮光短波电台</div>
-          <div class="project-desc">绿光 CRT · 短波调谐器</div>
-        </div>
-        <span class="project-arrow">→</span>
-      </a>
-      <a href="pet.html" class="project-card">
-        <div>
-          <div class="project-name">晶体管宠物</div>
-          <div class="project-desc">琥珀 CRT · 养成 2N2222</div>
-        </div>
-        <span class="project-arrow">→</span>
-      </a>
-      <a href="gallery.html" class="project-card">
-        <div>
-          <div class="project-name">1999 官方壁纸廊</div>
-          <div class="project-desc">逆转 · 官方视觉档案</div>
-        </div>
-        <span class="project-arrow">→</span>
-      </a>
-      <a href="_plugins/latenight-lottery/index.html" class="project-card">
-        <div>
-          <div class="project-name">凌晨宵夜抽奖机</div>
-          <div class="project-desc">琥珀 CRT · 深夜食堂轮盘</div>
-        </div>
-        <span class="project-arrow">→</span>
-      </a>
-    </div>
-  </section>
+    <!-- Bio -->
+    <section class="section">
+      <div class="section-title">· about ·</div>
+      <p class="bio">
+        Born in winter 2005. Write code at dusk.<br>
+        Favor the space between light and shadow —<br>
+        CRT phosphor on black glass, amber on obsidian.<br>
+        System programming, embedded rust,<br>
+        and the quiet conviction that<br>
+        a single line can change the world.
+      </p>
+    </section>
+
+    <!-- Projects -->
+    <section class="section">
+      <div class="section-title">· projects ·</div>
+      <div class="projects">
+        <a href="y2k.html" class="project-card">
+          <div>
+            <div class="project-name">Y2K 晶体管诊断仪</div>
+            <div class="project-desc">琥珀 CRT · 故障诊断台</div>
+          </div>
+          <span class="project-arrow">→</span>
+        </a>
+        <a href="signal.html" class="project-card">
+          <div>
+            <div class="project-name">1999 异常信号终端</div>
+            <div class="project-desc">灰绿 CRT · ARG 叙事</div>
+          </div>
+          <span class="project-arrow">→</span>
+        </a>
+        <a href="poetry.html" class="project-card">
+          <div>
+            <div class="project-name">废话诗社</div>
+            <div class="project-desc">白居易锐评 · 荒诞诗歌</div>
+          </div>
+          <span class="project-arrow">→</span>
+        </a>
+        <a href="radio.html" class="project-card">
+          <div>
+            <div class="project-name">暮光短波电台</div>
+            <div class="project-desc">绿光 CRT · 短波调谐器</div>
+          </div>
+          <span class="project-arrow">→</span>
+        </a>
+        <a href="pet.html" class="project-card">
+          <div>
+            <div class="project-name">晶体管宠物</div>
+            <div class="project-desc">琥珀 CRT · 养成 2N2222</div>
+          </div>
+          <span class="project-arrow">→</span>
+        </a>
+        <a href="gallery.html" class="project-card">
+          <div>
+            <div class="project-name">1999 官方壁纸廊</div>
+            <div class="project-desc">逆转 · 官方视觉档案</div>
+          </div>
+          <span class="project-arrow">→</span>
+        </a>
+        <a href="_plugins/latenight-lottery/index.html" class="project-card">
+          <div>
+            <div class="project-name">凌晨宵夜抽奖机</div>
+            <div class="project-desc">琥珀 CRT · 深夜食堂轮盘</div>
+          </div>
+          <span class="project-arrow">→</span>
+        </a>
+      </div>
+    </section>
+
+  </div>
 
   <!-- GitHub -->
   <section class="section">
