@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>马尾天文钟 · Mawei Astro Clock</title>
+<style>
+  @font-face {
+    font-family: 'Terminal';
+    src: local('Courier New'), local('Consolas'), local('monospace');
+  }
+
+  :root {
+    --amber: #ffb000;
+    --amber-dim: #cc8800;
+    --amber-glow: rgba(255, 176, 0, 0.15);
+    --bg: #0a0a0a;
+    --bg-card: #111111;
+    --text: #c0c0a0;
+    --text-dim: #606050;
+    --green: #33cc33;
+    --red: #ff4444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--amber);
+    font-family: 'Terminal', 'Courier New', monospace;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px),
+      radial-gradient(ellipse at center, rgba(255,176,0,0.03) 0%, transparent 70%);
+  }
+
+  .crt-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 3px);
+    pointer-events: none; z-index: 100;
+  }
+
+  .container {
+    max-width: 600px; width: 100%;
+    display: flex; flex-direction: column; gap: 16px;
+    position: relative; z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    text-align: center; padding: 16px 0 8px;
+    border-bottom: 1px solid var(--amber-dim);
+  }
+  .header .title {
+    font-size: 1.2rem; letter-spacing: 6px;
+    text-shadow: 0 0 10px var(--amber-glow), 0 0 40px var(--amber-glow);
+  }
+  .header .subtitle {
+    font-size: 0.65rem; color: var(--text-dim); margin-top: 4px;
+  }
+
+  /* Clock */
+  .clock-section {
+    text-align: center; padding: 12px 0;
+  }
+  .clock {
+    font-size: 3rem; font-weight: bold; letter-spacing: 4px;
+    text-shadow: 0 0 15px rgba(255,176,0,0.4), 0 0 60px rgba(255,176,0,0.2);
+    font-variant-numeric: tabular-nums;
+  }
+  .clock-date {
+    font-size: 0.8rem; color: var(--text-dim); margin-top: 4px;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid #222;
+    border-radius: 4px; padding: 16px;
+  }
+  .card-title {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 4px;
+    color: var(--amber-dim); margin-bottom: 12px;
+    border-bottom: 1px solid #1a1a1a; padding-bottom: 8px;
+  }
+
+  /* Sun Rise/Set */
+  .sun-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 1rem;
+  }
+  .sun-event { text-align: center; flex: 1; }
+  .sun-event .label { font-size: 0.6rem; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 4px; }
+  .sun-event .time { font-size: 1.4rem; color: var(--amber); font-weight: bold; }
+  .sun-divider { 
+    flex: 2; display: flex; flex-direction: column; align-items: center;
+    font-size: 0.65rem; color: var(--text-dim);
+  }
+  .sun-divider .bar-container {
+    width: 100%; height: 4px; background: #1a1a1a; border-radius: 2px;
+    margin: 6px 0; position: relative; overflow: hidden;
+  }
+  .sun-divider .bar-fill {
+    height: 100%; background: linear-gradient(90deg, #ff6600, #ffb000, #ffb000, #ff6600);
+    border-radius: 2px; transition: width 10s linear;
+  }
+  .sun-divider .bar-dot {
+    position: absolute; top: -2px; width: 8px; height: 8px;
+    background: #fff; border-radius: 50%; box-shadow: 0 0 8px #ffb000;
+    transition: left 10s linear;
+  }
+
+  /* Timeline */
+  .timeline {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    padding: 8px 0; position: relative;
+  }
+  .timeline::before {
+    content: ''; position: absolute; top: 24px; left: 0; right: 0; height: 60px;
+    background: linear-gradient(180deg, rgba(20,20,60,0.8) 0%, rgba(50,100,200,0.3) 20%, rgba(100,180,255,0.4) 50%, rgba(100,180,255,0.3) 80%, rgba(20,20,60,0.8) 100%);
+    border-radius: 4px;
+  }
+  .timeline-item {
+    text-align: center; flex: 1; position: relative; z-index: 1;
+    padding: 4px 2px;
+  }
+  .timeline-item .t-time {
+    font-size: 0.55rem; color: var(--text-dim); margin-top: 4px;
+  }
+  .timeline-item .t-label {
+    font-size: 0.5rem; color: var(--text-dim); margin-top: 2px;
+    transform: rotate(-30deg); white-space: nowrap;
+  }
+  .timeline-item.sun-event-highlight .t-time { color: var(--amber); font-weight: bold; }
+
+  /* Moon */
+  .moon-info {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .moon-phase {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .moon-visual {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: radial-gradient(circle at 36% 36%, #ffffcc, #ddbb66);
+    box-shadow: 0 0 20px rgba(221,187,102,0.3);
+    position: relative; overflow: hidden;
+  }
+  .moon-shadow {
+    position: absolute; top: 0; width: 100%; height: 100%;
+    background: var(--bg-card); border-radius: 50%;
+    transition: transform 0.5s;
+  }
+  .moon-text { font-size: 0.8rem; color: var(--amber); }
+  .moon-detail { font-size: 0.6rem; color: var(--text-dim); }
+  .moon-stats { display: flex; flex-direction: column; gap: 4px; font-size: 0.65rem; color: var(--text-dim); }
+  .moon-stats span { color: var(--amber); }
+
+  /* Stats Grid */
+  .stats-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  }
+  .stat-item { text-align: center; }
+  .stat-item .s-value { font-size: 1.2rem; font-weight: bold; color: var(--amber); }
+  .stat-item .s-label { font-size: 0.55rem; color: var(--text-dim); letter-spacing: 2px; margin-top: 4px; }
+
+  /* Next events */
+  .next-events { font-size: 0.65rem; color: var(--text-dim); line-height: 1.8; }
+
+  /* Footer */
+  .footer {
+    text-align: center; font-size: 0.55rem; color: #303020;
+    padding: 16px 0; letter-spacing: 2px;
+  }
+  .blink { animation: blink 1s step-end infinite; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  @media (max-width: 480px) {
+    .clock { font-size: 2.2rem; }
+    .sun-event .time { font-size: 1.1rem; }
+    .timeline-item .t-time { font-size: 0.45rem; }
+    .timeline-item .t-label { font-size: 0.4rem; }
+  }
+</style>
+</head>
+<body>
+<div class="crt-overlay"></div>
+<div class="container">
+
+  <div class="header">
+    <div class="title">F U Z H O U · M A W E I</div>
+    <div class="subtitle">福州马尾 · 天文钟</div>
+  </div>
+
+  <div class="clock-section">
+    <div class="clock" id="clock">--:--:--</div>
+    <div class="clock-date" id="clockDate">----年--月--日 周-</div>
+  </div>
+
+  <!-- Sun Rise/Set Card -->
+  <div class="card">
+    <div class="card-title">太阳 · SOL</div>
+    <div class="sun-row">
+      <div class="sun-event">
+        <div class="label">日出 ↑</div>
+        <div class="time" id="sunriseTime">--:--</div>
+      </div>
+      <div class="sun-divider">
+        <span>日长 <b id="dayLength">--</b></span>
+        <div class="bar-container">
+          <div class="bar-fill" id="sunBar"></div>
+          <div class="bar-dot" id="sunDot" style="left:0%"></div>
+        </div>
+        <span id="sunStatus">等待黎明</span>
+      </div>
+      <div class="sun-event">
+        <div class="label">日落 ↓</div>
+        <div class="time" id="sunsetTime">--:--</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Twilight Timeline -->
+  <div class="card">
+    <div class="card-title">晨昏蒙影 · TWILIGHT</div>
+    <div class="timeline" id="twilightTimeline">
+      <!-- Filled by JS -->
+    </div>
+  </div>
+
+  <!-- Moon Card -->
+  <div class="card">
+    <div class="card-title">月球 · LUNA</div>
+    <div class="moon-info">
+      <div class="moon-phase">
+        <div class="moon-visual">
+          <div class="moon-shadow" id="moonShadow"></div>
+        </div>
+        <div>
+          <div class="moon-text" id="moonPhaseName">--</div>
+          <div class="moon-detail" id="moonIllum">--</div>
+        </div>
+      </div>
+      <div class="moon-stats">
+        <div>月出 <span id="moonriseTime">--:--</span></div>
+        <div>月落 <span id="moonsetTime">--:--</span></div>
+        <div>月龄 <span id="moonAge">--</span> 天</div>
+        <div>距离 <span id="moonDist">--</span> km</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="card">
+    <div class="card-title">数据 · DATA</div>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="s-value" id="statDayLen">--</div>
+        <div class="s-label">今日昼长</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-value" id="statDayChange">--</div>
+        <div class="s-label">vs. 昨日</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-value" id="statSolarNoon">--</div>
+        <div class="s-label">正午时刻</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-value" id="statMaxAlt">--</div>
+        <div class="s-label">太阳最高高度</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upcoming -->
+  <div class="card">
+    <div class="card-title">即将到来 · NEXT</div>
+    <div class="next-events" id="nextEvents">
+      计算中...
+    </div>
+  </div>
+
+  <div class="footer">
+    <span id="updateTime">UPDATED: ----</span>&nbsp;&nbsp;
+    <span class="blink">█</span>&nbsp;
+    LAT 26.0°N · LNG 119.5°E
+  </div>
+
+</div>
+
+<script>
+// ==================== ASTRONOMICAL CALCULATIONS ====================
+const LAT = 26.0;
+const LNG = 119.5;
+const TZ_OFFSET = 8; // UTC+8
+
+function toRad(d) { return d * Math.PI / 180; }
+function toDeg(r) { return r * 180 / Math.PI; }
+
+// Julian Day
+function julianDay(date) {
+  let y = date.getUTCFullYear();
+  let m = date.getUTCMonth() + 1;
+  let d = date.getUTCDate() + date.getUTCHours() / 24 + date.getUTCMinutes() / 1440 + date.getUTCSeconds() / 86400;
+  if (m <= 2) { y -= 1; m += 12; }
+  let A = Math.floor(y / 100);
+  let B = 2 - A + Math.floor(A / 4);
+  return Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + d + B - 1524.5;
+}
+
+function julianCentury(jd) { return (jd - 2451545.0) / 36525; }
+
+// Sun position
+function sunPosition(jd) {
+  const T = julianCentury(jd);
+  const L0 = (280.46646 + T * (36000.76983 + T * 0.0003032)) % 360;
+  const M = (357.52911 + T * (35999.05029 - T * 0.0001537)) % 360;
+  const e = 0.016708634 - T * (0.000042037 + T * 0.0000001267);
+  const C = (1.914602 - T * (0.004817 + T * 0.000014)) * Math.sin(toRad(M))
+          + (0.019993 - T * 0.000101) * Math.sin(toRad(2 * M))
+          + 0.000289 * Math.sin(toRad(3 * M));
+  const sunLon = (L0 + C) % 360;
+  const obliq = 23.439291 - T * (0.013004167 + T * (0.0000001667 - T * 0.00000050167));
+  const sunDec = toDeg(Math.asin(Math.sin(toRad(obliq)) * Math.sin(toRad(sunLon))));
+  const eqTime = 4 * toDeg(
+    obliq >= 0
+      ? Math.atan2(Math.cos(toRad(obliq)) * Math.sin(toRad(sunLon)), Math.cos(toRad(sunLon)))
+      : 0
+  );
+  // More accurate equation of time
+  let y = Math.tan(toRad(obliq) / 2);
+  y *= y;
+  const eqTime2 = y * Math.sin(2 * toRad(L0))
+    - 2 * e * Math.sin(toRad(M))
+    + 4 * e * y * Math.sin(toRad(M)) * Math.cos(2 * toRad(L0))
+    - 0.5 * y * y * Math.sin(4 * toRad(L0))
+    - 1.25 * e * e * Math.sin(2 * toRad(M));
+  const eqt = toDeg(eqTime2) * 4;
+
+  return { dec: sunDec, eqt: eqt, lon: sunLon };
+}
+
+function calcSunriseSet(date, lat, lng) {
+  const jd = julianDay(date);
+  const sun = sunPosition(jd);
+  const ha = toDeg(Math.acos(
+    (Math.sin(toRad(-0.833)) - Math.sin(toRad(lat)) * Math.sin(toRad(sun.dec)))
+    / (Math.cos(toRad(lat)) * Math.cos(toRad(sun.dec)))
+  ));
+  const solarNoon = 12 * 3600 - (lng * 240) - (sun.eqt * 60);
+  const sunriseSec = solarNoon - ha * 240;
+  const sunsetSec = solarNoon + ha * 240;
+  const tzSec = TZ_OFFSET * 3600;
+
+  function secToTime(s) {
+    s = ((s % 86400) + 86400) % 86400;
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    return { h, m, total: h * 3600 + m * 60 };
+  }
+
+  const sr = secToTime(sunriseSec + tzSec);
+  const ss = secToTime(sunsetSec + tzSec);
+  const noon = secToTime(solarNoon + tzSec);
+
+  return {
+    sunrise: sr,
+    sunset: ss,
+    noon: noon,
+    civilDawn: secToTime(sunriseSec + tzSec - 24 * 60),
+    civilDusk: secToTime(sunsetSec + tzSec + 24 * 60),
+    nauticalDawn: secToTime(sunriseSec + tzSec - 48 * 60),
+    nauticalDusk: secToTime(sunsetSec + tzSec + 48 * 60),
+    astroDawn: secToTime(sunriseSec + tzSec - 72 * 60),
+    astroDusk: secToTime(sunsetSec + tzSec + 72 * 60),
+    dayLength: (sunsetSec - sunriseSec),
+    solarNoonAlt: 90 - lat + sun.dec
+  };
+}
+
+// Moon phase
+function moonPhase(jd) {
+  const T = julianCentury(jd);
+  const D = (297.8502042 + T * (445267.1115168 + T * (-0.0016300 + T * (1.0/545868 - T/113065000)))) % 360;
+  const M = (357.5291092 + T * (35999.0502909 + T * (-0.0001536 + T/24490000))) % 360;
+  const Mp = (134.9634114 + T * (477198.8676313 + T * (0.0089970 + T * (1.0/69699 - T/14712000)))) % 360;
+  const F = (93.2720993 + T * (483202.0175273 + T * (-0.0034029 - T * (1.0/3526000 + T/863310000)))) % 360;
+
+  const i = 180 - D * 1 - M * 0.1 + Mp * 1.8 + F * 1.2;
+  let phase = (i % 360 + 360) % 360;
+  let age = 29.530588853 * (phase / 360);
+
+  const dist = 385000.56 + 20905 * Math.cos(toRad(Mp)) + 3699 * Math.cos(toRad(2*D - Mp));
+
+  let name, illum;
+  if (phase < 11.25 || phase >= 348.75) { name = '新月 New Moon'; illum = 0; }
+  else if (phase < 78.75) { name = '娥眉月 Waxing Crescent'; illum = phase / 180 * 100; }
+  else if (phase < 101.25) { name = '上弦月 First Quarter'; illum = 50; }
+  else if (phase < 168.75) { name = '盈凸月 Waxing Gibbous'; illum = 50 + (phase - 90) / 180 * 100; }
+  else if (phase < 191.25) { name = '满月 Full Moon'; illum = 100; }
+  else if (phase < 258.75) { name = '亏凸月 Waning Gibbous'; illum = 100 - (phase - 180) / 180 * 100; }
+  else if (phase < 281.25) { name = '下弦月 Last Quarter'; illum = 50; }
+  else { name = '残月 Waning Crescent'; illum = 50 - (phase - 270) / 180 * 100; }
+
+  illum = Math.max(0, Math.min(100, illum));
+
+  // Moonrise approximation
+  const moonRiseApprox = (age / 29.5306 * 24 + 12) % 24;
+  const moonSetApprox = (moonRiseApprox + 12.5) % 24;
+
+  // More accurate moonrise
+  const moonday = age;
+  const mr = (moonday * 48.8 / 60 + 0.5) % 24;
+  const ms = (mr + 12.4) % 24;
+
+  return {
+    phase, age, name, illum, dist: Math.round(dist),
+    moonriseH: Math.floor(mr), moonriseM: Math.floor((mr % 1) * 60),
+    moonsetH: Math.floor(ms), moonsetM: Math.floor((ms % 1) * 60)
+  };
+}
+
+// ==================== UI UPDATE ====================
+function pad(n) { return n.toString().padStart(2, '0'); }
+function fmtTime(h, m) { return pad(h) + ':' + pad(m); }
+function fmtSec(s) {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  return h + 'h ' + m + 'm';
+}
+
+let lastDay = -1;
+
+function update() {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+  const yesterday = new Date(today.getTime() - 86400000);
+
+  // Clock
+  document.getElementById('clock').textContent =
+    pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+  const days = ['日','一','二','三','四','五','六'];
+  document.getElementById('clockDate').textContent =
+    now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日 周' + days[now.getDay()];
+
+  // Recalculate if day changed
+  const curDay = now.getDate();
+  if (curDay !== lastDay) {
+    lastDay = curDay;
+
+    const td = calcSunriseSet(today, LAT, LNG);
+    const yd = calcSunriseSet(yesterday, LAT, LNG);
+    const mp = moonPhase(julianDay(now));
+
+    // Sunrise/Sunset
+    document.getElementById('sunriseTime').textContent = fmtTime(td.sunrise.h, td.sunrise.m);
+    document.getElementById('sunsetTime').textContent = fmtTime(td.sunset.h, td.sunset.m);
+    document.getElementById('dayLength').textContent = fmtSec(td.dayLength);
+
+    // Stats
+    document.getElementById('statDayLen').textContent = fmtSec(td.dayLength);
+    const diff = td.dayLength - yd.dayLength;
+    const sign = diff >= 0 ? '+' : '';
+    document.getElementById('statDayChange').textContent = sign + Math.round(diff) + 's';
+    document.getElementById('statSolarNoon').textContent = fmtTime(td.noon.h, td.noon.m);
+    document.getElementById('statMaxAlt').textContent = td.solarNoonAlt.toFixed(1) + '°';
+
+    // Store for bar animation
+    window._td = td;
+
+    // Twilight timeline
+    const tl = document.getElementById('twilightTimeline');
+    const twilightEvents = [
+      { time: fmtTime(td.astroDawn.h, td.astroDawn.m), label: '天文曙光', cls: '' },
+      { time: fmtTime(td.nauticalDawn.h, td.nauticalDawn.m), label: '航海曙光', cls: '' },
+      { time: fmtTime(td.civilDawn.h, td.civilDawn.m), label: '市民曙光', cls: '' },
+      { time: fmtTime(td.sunrise.h, td.sunrise.m), label: '日出', cls: 'sun-event-highlight' },
+      { time: fmtTime(td.noon.h, td.noon.m), label: '正午', cls: '' },
+      { time: fmtTime(td.sunset.h, td.sunset.m), label: '日落', cls: 'sun-event-highlight' },
+      { time: fmtTime(td.civilDusk.h, td.civilDusk.m), label: '市民暮光', cls: '' },
+      { time: fmtTime(td.nauticalDusk.h, td.nauticalDusk.m), label: '航海暮光', cls: '' },
+      { time: fmtTime(td.astroDusk.h, td.astroDusk.m), label: '天文暮光', cls: '' },
+    ];
+    tl.innerHTML = twilightEvents.map(e =>
+      `<div class="timeline-item ${e.cls}"><div class="t-time">${e.time}</div><div class="t-label">${e.label}</div></div>`
+    ).join('');
+
+    // Moon
+    document.getElementById('moonPhaseName').textContent = mp.name;
+    document.getElementById('moonIllum').textContent = '亮度 ' + Math.round(mp.illum) + '%';
+    document.getElementById('moonriseTime').textContent = fmtTime(mp.moonriseH, mp.moonriseM);
+    document.getElementById('moonsetTime').textContent = fmtTime(mp.moonsetH, mp.moonsetM);
+    document.getElementById('moonAge').textContent = mp.age.toFixed(1);
+    document.getElementById('moonDist').textContent = (mp.dist / 10000).toFixed(1) + '万';
+
+    // Moon shadow for visual
+    const shadowEl = document.getElementById('moonShadow');
+    if (mp.phase < 180) {
+      shadowEl.style.transform = `translateX(${-20 + mp.phase / 180 * 80}%)`;
+    } else {
+      shadowEl.style.transform = `translateX(${60 - (mp.phase - 180) / 180 * 80}%)`;
+    }
+
+    // Upcoming events
+    const events = [];
+    const ev = twilightEvents;
+    for (let i = 0; i < ev.length; i++) {
+      const [eh, em] = ev[i].time.split(':').map(Number);
+      const eSec = eh * 3600 + em * 60;
+      const nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+      if (eSec > nowSec) {
+        events.push(ev[i].label + ' ' + ev[i].time);
+        if (events.length >= 4) break;
+      }
+    }
+    if (events.length === 0) events.push('天文曙光 ' + ev[0].time + ' (次日)');
+    document.getElementById('nextEvents').innerHTML = events.map(e => '→ ' + e).join('<br>');
+
+    // Update time
+    document.getElementById('updateTime').textContent =
+      'UPDATED: ' + now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+  }
+
+  // Animate sun bar
+  if (window._td) {
+    const td = window._td;
+    const nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    const srSec = td.sunrise.h * 3600 + td.sunrise.m * 60;
+    const ssSec = td.sunset.h * 3600 + td.sunset.m * 60;
+    let pct = 0;
+    let status = '';
+    if (nowSec < srSec) {
+      pct = 0;
+      const remain = srSec - nowSec;
+      const rh = Math.floor(remain / 3600);
+      const rm = Math.floor((remain % 3600) / 60);
+      status = rh + 'h' + rm + 'm 后日出';
+    } else if (nowSec < ssSec) {
+      pct = ((nowSec - srSec) / (ssSec - srSec)) * 100;
+      const remain = ssSec - nowSec;
+      const rh = Math.floor(remain / 3600);
+      const rm = Math.floor((remain % 3600) / 60);
+      status = '距日落 ' + rh + 'h' + rm + 'm';
+    } else {
+      pct = 100;
+      const untilNext = (86400 - nowSec) + srSec;
+      const rh = Math.floor(untilNext / 3600);
+      const rm = Math.floor((untilNext % 3600) / 60);
+      status = rh + 'h' + rm + 'm 后日出';
+    }
+    document.getElementById('sunBar').style.width = pct + '%';
+    document.getElementById('sunDot').style.left = Math.max(0, Math.min(100, pct)) + '%';
+    document.getElementById('sunStatus').textContent = status;
+  }
+}
+
+update();
+setInterval(update, 1000);
+</script>
+</body>
+</html>
