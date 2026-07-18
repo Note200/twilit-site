@@ -21,6 +21,14 @@
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  html {
+    animation: pageReveal 0.5s ease-out;
+  }
+  @keyframes pageReveal {
+    from { opacity: 0; filter: brightness(1.6) blur(1px); }
+    to   { opacity: 1; filter: brightness(1) blur(0); }
+  }
+
   body {
     background: var(--bg);
     color: var(--text);
@@ -45,6 +53,16 @@
     );
     pointer-events: none;
     z-index: 100;
+    animation: scanlineJitter 8s infinite;
+  }
+  @keyframes scanlineJitter {
+    0%, 100% { opacity: 1; transform: translateY(0); }
+    1%  { opacity: 0.82; }
+    2%  { opacity: 1; }
+    50% { opacity: 0.94; }
+    52% { opacity: 1; }
+    97% { opacity: 0.88; }
+    98% { opacity: 1; }
   }
 
   body::after {
@@ -56,6 +74,9 @@
     z-index: 99;
   }
 
+  /* ================================================
+     Layout
+     ================================================ */
   .container {
     max-width: 480px;
     margin: 0 auto;
@@ -64,283 +85,224 @@
     z-index: 1;
   }
 
-  /* Hero */
-  .hero {
-    text-align: center;
-    margin-bottom: 3rem;
-    padding-top: 2rem;
+  @media (min-width: 768px) {
+    .container {
+      max-width: 900px;
+      padding: 4rem 2.5rem 5rem;
+    }
   }
 
+  /* ================================================
+     Hero / Title
+     ================================================ */
+  .hero {
+    text-align: center;
+    margin-bottom: 1.2rem;
+    padding-top: 1.5rem;
+  }
   .domain {
     font-family: 'Space Mono', monospace;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     letter-spacing: 0.15em;
     color: var(--twilight-dim);
     text-transform: lowercase;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.6rem;
   }
-
   .motto {
-    font-size: 2rem;
+    font-size: 1.6rem;
     font-weight: 300;
     color: var(--twilight);
     letter-spacing: 0.25em;
-    margin-bottom: 0.8rem;
+    margin-bottom: 0.4rem;
   }
 
-  .motto-sub {
-    font-size: 0.9rem;
-    color: var(--text-dim);
-    letter-spacing: 0.1em;
+  @media (min-width: 768px) {
+    .hero { padding-top: 2.5rem; margin-bottom: 1.8rem; }
+    .domain { font-size: 0.9rem; }
+    .motto { font-size: 2.2rem; letter-spacing: 0.3em; }
   }
 
-  .name {
-    font-size: 1.1rem;
+  /* ================================================
+     Digital Clock
+     ================================================ */
+  .clock-section {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  .clock-time {
+    font-family: 'Space Mono', monospace;
+    font-size: 2.4rem;
     color: var(--twilight-pale);
-    letter-spacing: 0.08em;
-    margin-top: 2rem;
+    letter-spacing: 0.12em;
+    line-height: 1;
+    text-shadow: 0 0 18px rgba(201,169,110,0.15);
   }
-
-  /* Divider */
-  .divider {
-    width: 60px;
-    height: 1px;
-    background: var(--twilight-dim);
-    margin: 2.5rem auto;
-    position: relative;
-  }
-  .divider::after {
-    content: '◇';
-    position: absolute;
-    top: -0.6rem;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.6rem;
+  .clock-seconds {
+    font-size: 1.2rem;
     color: var(--twilight-dim);
-    background: var(--bg);
-    padding: 0 0.5rem;
-  }
-
-  /* Section */
-  .section {
-    margin-bottom: 2.5rem;
-  }
-
-  .section-title {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.75rem;
-    letter-spacing: 0.2em;
-    color: var(--twilight-dim);
-    text-transform: uppercase;
-    margin-bottom: 1rem;
-    padding-left: 0.3rem;
-    border-left: 1px solid var(--twilight-dim);
-  }
-
-  /* Bio */
-  .bio {
-    font-size: 0.95rem;
-    color: var(--text);
-    line-height: 2;
-  }
-
-  /* Project cards */
-  .projects {
-    display: flex;
-    flex-direction: column;
-    gap: 0.8rem;
-  }
-
-  .project-card {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    padding: 1rem 1.2rem;
-    text-decoration: none;
-    color: inherit;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: border-color 0.3s;
-    min-height: 48px;
-  }
-
-  .project-card:hover,
-  .project-card:active {
-    border-color: var(--twilight-dim);
-  }
-
-  .project-name {
-    font-size: 0.95rem;
-    color: var(--twilight-pale);
-  }
-
-  .project-desc {
-    font-size: 0.78rem;
-    color: var(--text-dim);
-    margin-top: 0.2rem;
-  }
-
-  .project-arrow {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.8rem;
-    color: var(--twilight-dim);
-    flex-shrink: 0;
-  }
-
-  /* GitHub repos */
-  .repo-card {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    padding: 1rem 1.2rem;
-    text-decoration: none;
-    color: inherit;
-    display: block;
-    transition: border-color 0.3s;
-  }
-  .repo-card:hover,
-  .repo-card:active {
-    border-color: var(--twilight-dim);
-  }
-  .repo-lang {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--twilight-dim);
-    margin-top: 0.4rem;
-    letter-spacing: 0.1em;
-  }
-
-  /* Tech tags */
-  .tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  .tag {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.7rem;
-    padding: 0.3rem 0.7rem;
-    border: 1px solid var(--card-border);
-    color: var(--twilight-dim);
+    vertical-align: super;
     letter-spacing: 0.05em;
   }
+  .clock-quiet {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    margin-top: 0.5rem;
+    opacity: 0.7;
+  }
 
-  /* Footer */
+  @media (min-width: 768px) {
+    .clock-time { font-size: 3.6rem; }
+    .clock-seconds { font-size: 1.6rem; }
+    .clock-quiet { font-size: 0.78rem; }
+  }
+
+  /* ================================================
+     Typewriter Monologue
+     ================================================ */
+  .typewriter-section {
+    margin-bottom: 2rem;
+  }
+  .typewriter-box {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    padding: 1.2rem 1.4rem;
+    min-height: 5rem;
+    position: relative;
+  }
+  .typewriter-text {
+    font-size: 0.92rem;
+    color: var(--text);
+    line-height: 2;
+    letter-spacing: 0.03em;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .typewriter-cursor {
+    display: inline-block;
+    width: 1px;
+    height: 1em;
+    background: var(--twilight);
+    vertical-align: text-bottom;
+    margin-left: 1px;
+    animation: cursorBlink 0.8s step-end infinite;
+  }
+  .typewriter-cursor.paused {
+    animation: cursorBlinkSlow 1.6s step-end infinite;
+  }
+  @keyframes cursorBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  @keyframes cursorBlinkSlow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  .typewriter-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    letter-spacing: 0.12em;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+  }
+
+  @media (min-width: 768px) {
+    .typewriter-box { padding: 1.5rem 1.8rem; min-height: 6rem; }
+    .typewriter-text { font-size: 1rem; line-height: 2.2; }
+  }
+
+  /* ================================================
+     Poetry Card
+     ================================================ */
+  .poetry-section {
+    margin-bottom: 2rem;
+  }
+  .poetry-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    padding: 1.2rem 1.4rem;
+    text-align: center;
+    transition: border-color 0.4s ease, box-shadow 0.4s ease, opacity 0.4s ease;
+    cursor: pointer;
+    user-select: none;
+  }
+  .poetry-card:hover {
+    border-color: var(--twilight-dim);
+    box-shadow: 0 4px 20px rgba(201,169,110,0.08);
+  }
+  .poetry-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 0.88rem;
+    color: var(--twilight-pale);
+    letter-spacing: 0.08em;
+    margin-bottom: 0.6rem;
+  }
+  .poetry-body {
+    font-size: 0.85rem;
+    color: var(--text);
+    line-height: 2.2;
+    letter-spacing: 0.04em;
+    white-space: pre-line;
+  }
+  .poetry-author {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    margin-top: 0.8rem;
+  }
+  .poetry-hint {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    margin-top: 0.7rem;
+    opacity: 0.5;
+  }
+  .poetry-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    letter-spacing: 0.12em;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+  }
+
+  @media (min-width: 768px) {
+    .poetry-card { padding: 1.5rem 2rem; }
+    .poetry-title { font-size: 0.95rem; }
+    .poetry-body { font-size: 0.9rem; line-height: 2.4; }
+  }
+
+  /* ================================================
+     Footer / Nav
+     ================================================ */
   .footer {
     text-align: center;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-dim);
-    margin-top: 3rem;
+    margin-top: 2.5rem;
     letter-spacing: 0.1em;
+    animation: footerBreathe 4.5s ease-in-out infinite;
+  }
+  @keyframes footerBreathe {
+    0%, 100% { opacity: 0.5; }
+    50%      { opacity: 1; }
   }
   .footer a {
     color: var(--twilight-dim);
     text-decoration: none;
+    transition: color 0.3s;
   }
-  .footer a:hover {
-    color: var(--twilight);
-  }
-
-  /* Guestbook */
-  .guestbook-form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-    margin-bottom: 1.5rem;
-  }
-  .gb-input {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    color: var(--text);
-    font-family: 'Noto Serif SC', serif;
-    font-size: 0.85rem;
-    padding: 0.65rem 0.8rem;
-    outline: none;
-    transition: border-color 0.3s;
-    resize: vertical;
-  }
-  .gb-input::placeholder { color: var(--text-dim); }
-  .gb-input:focus { border-color: var(--twilight-dim); }
-  .gb-textarea { min-height: 60px; }
-  .gb-btn {
-    align-self: flex-end;
-    background: transparent;
-    border: 1px solid var(--twilight-dim);
-    color: var(--twilight-dim);
-    font-family: 'Space Mono', monospace;
-    font-size: 0.72rem;
-    padding: 0.4rem 1.4rem;
-    cursor: pointer;
-    letter-spacing: 0.12em;
-    transition: all 0.3s;
-  }
-  .gb-btn:hover { color: var(--twilight); border-color: var(--twilight); }
-  .gb-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .gb-status {
-    font-size: 0.72rem;
-    color: var(--text-dim);
-    min-height: 1.2em;
-    letter-spacing: 0.05em;
-  }
-  .gb-status.success { color: #6ba368; }
-  .gb-status.error { color: #c0392b; }
-  .gb-messages {
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-    max-height: 320px;
-    overflow-y: auto;
-  }
-  .gb-msg-card {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    padding: 0.7rem 0.9rem;
-    font-size: 0.82rem;
-    animation: gbFadeIn 0.4s ease-out;
-  }
-  @keyframes gbFadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .gb-msg-name {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.68rem;
-    color: var(--twilight-dim);
-    letter-spacing: 0.08em;
-    margin-bottom: 0.3rem;
-  }
-  .gb-msg-text {
-    color: var(--text);
-    line-height: 1.6;
-    word-break: break-word;
-  }
-  .gb-msg-time {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.62rem;
-    color: var(--text-dim);
-    margin-top: 0.4rem;
-  }
-  .gb-empty {
-    text-align: center;
-    font-size: 0.8rem;
-    color: var(--text-dim);
-    padding: 1.5rem 0;
-    letter-spacing: 0.06em;
-  }
+  .footer a:hover { color: var(--twilight); }
 
   /* ================================================
-     [ENHANCED] Dynamic Effects & Visual Polish
+     Shared Effects (from original)
      ================================================ */
 
-  /* -- Page Transition -- */
-  html {
-    animation: pageReveal 0.5s ease-out;
-  }
-  @keyframes pageReveal {
-    from { opacity: 0; filter: brightness(1.6) blur(1px); }
-    to   { opacity: 1; filter: brightness(1) blur(0); }
-  }
-
-  /* -- Mouse Follow Glow -- */
+  /* Mouse Glow */
   #mouse-glow {
     position: fixed;
     pointer-events: none;
@@ -354,7 +316,7 @@
     will-change: left, top, opacity;
   }
 
-  /* -- CRT Noise Overlay -- */
+  /* CRT Noise Overlay */
   #crt-noise {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -371,7 +333,7 @@
     53% { opacity: 0.02; }
   }
 
-  /* -- Click Ripple -- */
+  /* Click Ripple */
   .click-ripple {
     position: fixed;
     pointer-events: none;
@@ -385,9 +347,8 @@
     to   { width: 130px; height: 130px; opacity: 0; margin-left: -65px; margin-top: -65px; }
   }
 
-  /* -- Title / Heading Hover Pulse -- */
-  h1:hover, h2:hover, .motto:hover, .call-sign:hover, .plaque h1:hover,
-  .domain:hover, .brand:hover, .logo:hover {
+  /* Title Hover Pulse */
+  .motto:hover, .clock-time:hover {
     animation: titlePulse 0.9s ease-in-out;
   }
   @keyframes titlePulse {
@@ -395,58 +356,13 @@
     50%      { text-shadow: 0 0 22px #c9a96e, 0 0 45px #c9a96e; }
   }
 
-  /* -- Card Lift + Border Glow on Hover -- */
-  .project-card, .repo-card, .poem, .panel, .terminal, .log-entry {
-    transition: transform 0.3s cubic-bezier(0.33, 1, 0.68, 1),
-                box-shadow 0.3s cubic-bezier(0.33, 1, 0.68, 1),
-                border-color 0.3s ease;
-  }
-  .project-card:hover, .repo-card:hover, .poem:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 28px rgba(201,169,110,0.14);
-    border-color: rgba(201,169,110,0.4);
-  }
-  .panel:hover, .terminal:hover {
-    box-shadow: 0 4px 20px rgba(201,169,110,0.08);
-  }
-
-  /* -- Unified Interactive Transition -- */
-  a, button, .action-btn, .diag-btn, .decode-btn, .bai-btn, .band-btn,
-  .send-btn, .btn-sm, .project-card, .repo-card, .tag, input, textarea {
+  a, button {
     transition: color 0.25s ease, background 0.25s ease,
                 border-color 0.25s ease, box-shadow 0.25s ease,
                 transform 0.2s ease, opacity 0.25s ease;
   }
 
-  /* -- Footer Breathing Light -- */
-  .footer, .back-link, .status-bar {
-    animation: footerBreathe 4.5s ease-in-out infinite;
-  }
-  @keyframes footerBreathe {
-    0%, 100% { opacity: 0.6; }
-    50%      { opacity: 1; }
-  }
-
-  /* -- Enhanced Scanline Animation -- */
-  @keyframes scanlineJitter {
-    0%, 100% { opacity: 1; transform: translateY(0); }
-    1%  { opacity: 0.82; }
-    2%  { opacity: 1; }
-    50% { opacity: 0.94; }
-    52% { opacity: 1; }
-    97% { opacity: 0.88; }
-    98% { opacity: 1; }
-  }
-  body::before {
-    animation: scanlineJitter 8s infinite;
-  }
-
-
-  /* ================================================
-     [NEW] 3D Card Tilt + Audio Button + Three Canvas
-     ================================================ */
-
-  /* -- Three.js Canvas Container -- */
+  /* Three.js Canvas */
   #three-canvas {
     position: fixed;
     top: 0; left: 0;
@@ -455,13 +371,7 @@
     z-index: 0;
   }
 
-  /* -- 3D Card Tilt -- */
-  .project-card, .repo-card, .poem, .panel, .crt-frame, .msg, .log-entry {
-    transform-style: preserve-3d;
-    perspective: 800px;
-  }
-
-  /* -- Audio Toggle Button -- */
+  /* Audio Toggle Button */
   #audio-toggle {
     position: fixed;
     bottom: 24px;
@@ -492,14 +402,9 @@
     opacity: 0.22;
     border-color: rgba(201,169,110,0.3);
   }
-  #audio-toggle.playing:hover {
-    opacity: 0.65;
-  }
+  #audio-toggle.playing:hover { opacity: 0.65; }
 
-
-  /* ================================================
-     [NEW] Audio Activation Hint Bar
-     ================================================ */
+  /* Audio Hint Bar */
   #audio-hint {
     position: fixed;
     top: -1px;
@@ -513,7 +418,7 @@
     display: flex;
     align-items: center;
     gap: 0.55rem;
-    font-family: 'Space Mono', 'Share Tech Mono', 'Source Code Pro', 'Courier New', monospace;
+    font-family: 'Space Mono', monospace;
     font-size: 0.68rem;
     color: rgba(201,169,110,0.72);
     letter-spacing: 0.07em;
@@ -536,316 +441,71 @@
     0%, 100% { opacity: 0.25; box-shadow: 0 0 2px rgba(201,169,110,0.3); }
     50%      { opacity: 1;    box-shadow: 0 0 8px rgba(201,169,110,0.5); }
   }
-
-
-  /* ================================================
-     [DESKTOP] Responsive layout for larger screens
-     ================================================ */
-  @media (min-width: 768px) {
-
-    .container {
-      max-width: 900px;
-      padding: 4rem 2.5rem 5rem;
-    }
-
-    /* -- Hero: bigger and more breathing room -- */
-    .hero {
-      padding-top: 3.5rem;
-    }
-    .domain {
-      font-size: 1rem;
-      letter-spacing: 0.2em;
-    }
-    .motto {
-      font-size: 2.8rem;
-      letter-spacing: 0.3em;
-    }
-    .motto-sub {
-      font-size: 1.05rem;
-    }
-    .name {
-      font-size: 1.3rem;
-    }
-
-    /* -- Two-column content grid -- */
-    .content-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-      margin-bottom: 1rem;
-    }
-
-    /* -- Bio: nicer reading width -- */
-    .bio {
-      font-size: 1rem;
-      line-height: 2.2;
-      max-width: 34em;
-    }
-
-    /* -- Projects: 2-column grid with bigger cards -- */
-    .projects {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
-    /* inside content-grid (side-by-side layout), keep single column */
-    .content-grid .projects {
-      grid-template-columns: 1fr;
-    }
-    .project-card {
-      padding: 1.2rem 1.4rem;
-      min-height: 72px;
-    }
-    .project-name {
-      font-size: 1.05rem;
-    }
-    .project-desc {
-      font-size: 0.82rem;
-    }
-
-    /* -- GitHub repos: 2-column grid -- */
-    .repo-card {
-      padding: 1.2rem 1.4rem;
-    }
-
-    /* -- Stack tags: more spaced -- */
-    .tags {
-      gap: 0.7rem;
-    }
-    .tag {
-      font-size: 0.75rem;
-      padding: 0.4rem 0.9rem;
-    }
-
-    /* -- Guestbook: wider, side-by-side on desktop -- */
-    .guestbook-form {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-areas:
-        "name   msg"
-        "status btn";
-      gap: 0.8rem 1rem;
-      align-items: start;
-    }
-    .gb-textarea { grid-area: msg; min-height: 80px; }
-    #gb-name { grid-area: name; }
-    .gb-status { grid-area: status; }
-    .gb-btn { grid-area: btn; justify-self: end; align-self: end; }
-
-    .gb-messages {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.8rem;
-      max-height: 400px;
-    }
-
-    /* -- Divider wider -- */
-    .divider {
-      width: 80px;
-      margin: 3rem auto;
-    }
-
-    /* -- Sections more spacing -- */
-    .section {
-      margin-bottom: 3.5rem;
-    }
-    .section-title {
-      font-size: 0.78rem;
-    }
-
-    /* -- Footer larger -- */
-    .footer {
-      font-size: 0.8rem;
-      margin-top: 4rem;
-    }
-
-    /* -- Side ornament: subtle left/right CRT brackets -- */
-    .container::before,
-    .container::after {
-      content: '';
-      position: absolute;
-      top: 4rem;
-      width: 1px;
-      height: 120px;
-      background: linear-gradient(to bottom, transparent, var(--twilight-dim), transparent);
-      opacity: 0.3;
-    }
-    .container::before { left: -1.5rem; }
-    .container::after  { right: -1.5rem; }
-
-  }
-
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
+
+<!-- Audio Hint -->
 <div id="audio-hint">
   <span class="audio-hint-dot"></span>
   <span>点击任意位置激活音频体验</span>
 </div>
-<script>
-(function(){
-  var hint = document.getElementById('audio-hint');
-  if (!hint) return;
-  var gone = false;
-  function dismiss() {
-    if (gone) return; gone = true;
-    hint.style.opacity = '0';
-    hint.style.transform = 'translateX(-50%) translateY(-120%)';
-    setTimeout(function(){ hint.remove(); }, 600);
-  }
-  setTimeout(dismiss, 3500);
-  document.addEventListener('click', dismiss, {once: true});
-  document.addEventListener('touchstart', dismiss, {once: true});
-})();
-</script>
+
 <div class="container">
 
   <!-- Hero -->
   <section class="hero">
     <div class="domain">twilit.site</div>
     <div class="motto">虚室生白</div>
-    <div class="motto-sub">the empty room gives birth to light</div>
-    <div class="name">peng gong</div>
   </section>
 
-  <div class="divider"></div>
+  <!-- Digital Clock -->
+  <section class="clock-section">
+    <div class="clock-time" id="clock-display">
+      <span id="clock-hhmm">--:--</span><span class="clock-seconds" id="clock-ss">--</span>
+    </div>
+    <div class="clock-quiet" id="clock-quiet">你已在此停留 0 秒</div>
+  </section>
 
-  <div class="content-grid">
-
-    <!-- Bio -->
-    <section class="section">
-      <div class="section-title">· about ·</div>
-      <p class="bio">
-        Born in winter 2005. Write code at dusk.<br>
-        Favor the space between light and shadow —<br>
-        CRT phosphor on black glass, amber on obsidian.<br>
-        System programming, embedded rust,<br>
-        and the quiet conviction that<br>
-        a single line can change the world.
-      </p>
-    </section>
-
-    <!-- Projects -->
-    <section class="section">
-      <div class="section-title">· projects ·</div>
-      <div class="projects">
-        <a href="y2k.html" class="project-card">
-          <div>
-            <div class="project-name">Y2K 晶体管诊断仪</div>
-            <div class="project-desc">琥珀 CRT · 故障诊断台</div>
-          </div>
-          <span class="project-arrow">→</span>
-        </a>
-        <a href="signal.html" class="project-card">
-          <div>
-            <div class="project-name">1999 异常信号终端</div>
-            <div class="project-desc">灰绿 CRT · ARG 叙事</div>
-          </div>
-          <span class="project-arrow">→</span>
-        </a>
-        <a href="poetry.html" class="project-card">
-          <div>
-            <div class="project-name">废话诗社</div>
-            <div class="project-desc">白居易锐评 · 荒诞诗歌</div>
-          </div>
-          <span class="project-arrow">→</span>
-        </a>
-        <a href="radio.html" class="project-card">
-          <div>
-            <div class="project-name">暮光短波电台</div>
-            <div class="project-desc">绿光 CRT · 短波调谐器</div>
-          </div>
-          <span class="project-arrow">→</span>
-        </a>
-        <a href="pet.html" class="project-card">
-          <div>
-            <div class="project-name">晶体管宠物</div>
-            <div class="project-desc">琥珀 CRT · 养成 2N2222</div>
-          </div>
-          <span class="project-arrow">→</span>
-        </a>
-        <a href="gallery.html" class="project-card">
-          <div>
-            <div class="project-name">1999 官方壁纸廊</div>
-            <div class="project-desc">逆转 · 官方视觉档案</div>
-          </div>
-          <span class="project-arrow">→</span>
-        </a>
-        <a href="_plugins/latenight-lottery/index.html" class="project-card">
-          <div>
-            <div class="project-name">凌晨宵夜抽奖机</div>
-            <div class="project-desc">琥珀 CRT · 深夜食堂轮盘</div>
-          </div>
-          <span class="project-arrow">→</span>
-        </a>
-      </div>
-    </section>
-
-  </div>
-
-  <!-- GitHub -->
-  <section class="section">
-    <div class="section-title">· github ·</div>
-    <div class="projects">
-      <a href="https://github.com/Note200/study-checkin-backend" class="repo-card" target="_blank">
-        <div class="project-name">study-checkin-backend</div>
-        <div class="repo-lang">Java</div>
-      </a>
-      <a href="https://github.com/Note200/study-checkin-miniapp" class="repo-card" target="_blank">
-        <div class="project-name">study-checkin-miniapp</div>
-        <div class="repo-lang">JavaScript</div>
-      </a>
-      <a href="https://github.com/Note200/cloud-mail" class="repo-card" target="_blank">
-        <div class="project-name">cloud-mail</div>
-        <div class="repo-lang">Cloudflare Email · Fork</div>
-      </a>
+  <!-- Typewriter Monologue -->
+  <section class="typewriter-section">
+    <div class="typewriter-label">· monologue ·</div>
+    <div class="typewriter-box">
+      <span class="typewriter-text" id="typewriter-text"></span><span class="typewriter-cursor" id="typewriter-cursor"></span>
     </div>
   </section>
 
-  <!-- Stack -->
-  <section class="section">
-    <div class="section-title">· stack ·</div>
-    <div class="tags">
-      <span class="tag">C</span>
-      <span class="tag">Rust</span>
-      <span class="tag">Python</span>
-      <span class="tag">Linux</span>
-      <span class="tag">嵌入式</span>
-      <span class="tag">CRT</span>
-      <span class="tag">晶体管</span>
+  <!-- Poetry Card -->
+  <section class="poetry-section">
+    <div class="poetry-label">· poetry ·</div>
+    <div class="poetry-card" id="poetry-card">
+      <div class="poetry-title" id="poetry-title"></div>
+      <div class="poetry-body" id="poetry-body"></div>
+      <div class="poetry-author" id="poetry-author"></div>
+      <div class="poetry-hint">— click for another —</div>
     </div>
-  </section>
-
-  <!-- Guestbook -->
-  <section class="section">
-    <div class="section-title">· guestbook ·</div>
-    <div class="guestbook-form">
-      <input type="text" id="gb-name" class="gb-input" placeholder="name (optional)" maxlength="50">
-      <textarea id="gb-msg" class="gb-input gb-textarea" placeholder="leave a word..." maxlength="500" rows="2"></textarea>
-      <button id="gb-submit" class="gb-btn">SEND</button>
-      <p id="gb-status" class="gb-status"></p>
-    </div>
-    <div class="gb-messages" id="gb-messages"></div>
   </section>
 
   <!-- Footer -->
   <footer class="footer">
     twilight falls on all things equally<br>
+    <a href="/about">· about ·</a>
+    &nbsp;&nbsp;
     <a href="https://github.com/Note200" target="_blank">github/note200</a>
   </footer>
 
 </div>
+
+<!-- ================================================
+     JS: Dynamic Effects (Mouse Glow, Ripple, Noise)
+     ================================================ -->
 <script>
-/* ================================================
-   [ENHANCED] Dynamic Effects — Mouse Glow, Ripple, Noise
-   ================================================ */
 (function() {
-  /* -- Mouse Glow -- */
+  /* Mouse Glow */
   var glow = document.createElement('div');
   glow.id = 'mouse-glow';
   document.body.appendChild(glow);
-
   var glowTimer = null;
   document.addEventListener('mousemove', function(e) {
     glow.style.left = e.clientX + 'px';
@@ -856,7 +516,7 @@
   });
   document.addEventListener('mouseleave', function() { glow.style.opacity = '0'; });
 
-  /* -- CRT Noise Overlay -- */
+  /* CRT Noise Overlay */
   var noise = document.createElement('div');
   noise.id = 'crt-noise';
   (function() {
@@ -868,7 +528,7 @@
   })();
   document.body.appendChild(noise);
 
-  /* -- Click Ripple -- */
+  /* Click Ripple */
   document.addEventListener('click', function(e) {
     var ripple = document.createElement('div');
     ripple.className = 'click-ripple';
@@ -878,384 +538,546 @@
     setTimeout(function() { ripple.remove(); }, 750);
   });
 })();
-
-  /* -- Floating Particles Canvas -- */
-  (function() {
-    var pc = document.createElement('canvas');
-    pc.id = 'particle-canvas';
-    pc.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;';
-    document.body.insertBefore(pc, document.body.firstChild);
-    var pctx = pc.getContext('2d');
-    var parts = [];
-    function resizep() { pc.width = window.innerWidth; pc.height = window.innerHeight; }
-    resizep();
-    window.addEventListener('resize', function() { resizep(); rebuildParts(); });
-    function rebuildParts() {
-      parts = [];
-      var cnt = Math.min(Math.floor(pc.width * pc.height / 14000), 120);
-      for (var i = 0; i < cnt; i++) {
-        parts.push({
-          x: Math.random() * pc.width, y: Math.random() * pc.height,
-          vx: (Math.random() - 0.5) * 0.25, vy: (Math.random() - 0.5) * 0.25,
-          sz: Math.random() * 1.4 + 0.3, a: Math.random() * 0.35 + 0.04,
-          fd: Math.random() > 0.5 ? 1 : -1
-        });
-      }
-    }
-    rebuildParts();
-    function particleLoop() {
-      pctx.clearRect(0, 0, pc.width, pc.height);
-      for (var i = 0; i < parts.length; i++) {
-        var p = parts[i];
-        p.x += p.vx; p.y += p.vy;
-        p.a += p.fd * 0.0025;
-        if (p.a > 0.4) p.fd = -1;
-        if (p.a < 0.03) p.fd = 1;
-        if (p.x < -10) p.x = pc.width + 10;
-        if (p.x > pc.width + 10) p.x = -10;
-        if (p.y < -10) p.y = pc.height + 10;
-        if (p.y > pc.height + 10) p.y = -10;
-        pctx.beginPath();
-        pctx.arc(p.x, p.y, p.sz, 0, Math.PI * 2);
-        pctx.fillStyle = 'rgba(201,169,110,' + p.a + ')';
-        pctx.fill();
-      }
-      requestAnimationFrame(particleLoop);
-    }
-    particleLoop();
-  })();
-
 </script>
+
+<!-- ================================================
+     JS: Floating Particles Canvas
+     ================================================ -->
 <script>
+(function() {
+  var pc = document.createElement('canvas');
+  pc.id = 'particle-canvas';
+  pc.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;';
+  document.body.insertBefore(pc, document.body.firstChild);
+  var pctx = pc.getContext('2d');
+  var parts = [];
+  function resizep() { pc.width = window.innerWidth; pc.height = window.innerHeight; }
+  resizep();
+  window.addEventListener('resize', function() { resizep(); rebuildParts(); });
+  function rebuildParts() {
+    parts = [];
+    var cnt = Math.min(Math.floor(pc.width * pc.height / 14000), 120);
+    for (var i = 0; i < cnt; i++) {
+      parts.push({
+        x: Math.random() * pc.width, y: Math.random() * pc.height,
+        vx: (Math.random() - 0.5) * 0.25, vy: (Math.random() - 0.5) * 0.25,
+        sz: Math.random() * 1.4 + 0.3, a: Math.random() * 0.35 + 0.04,
+        fd: Math.random() > 0.5 ? 1 : -1
+      });
+    }
+  }
+  rebuildParts();
+  function particleLoop() {
+    pctx.clearRect(0, 0, pc.width, pc.height);
+    for (var i = 0; i < parts.length; i++) {
+      var p = parts[i];
+      p.x += p.vx; p.y += p.vy;
+      p.a += p.fd * 0.0025;
+      if (p.a > 0.4) p.fd = -1;
+      if (p.a < 0.03) p.fd = 1;
+      if (p.x < -10) p.x = pc.width + 10;
+      if (p.x > pc.width + 10) p.x = -10;
+      if (p.y < -10) p.y = pc.height + 10;
+      if (p.y > pc.height + 10) p.y = -10;
+      pctx.beginPath();
+      pctx.arc(p.x, p.y, p.sz, 0, Math.PI * 2);
+      pctx.fillStyle = 'rgba(201,169,110,' + p.a + ')';
+      pctx.fill();
+    }
+    requestAnimationFrame(particleLoop);
+  }
+  particleLoop();
+})();
+</script>
 
-  /* -- Lo-Fi Ambient Audio -- */
-  (function() {
-    var audioCtx = null;
-    var masterGain = null;
-    var droneOsc = null;
-    var droneGain = null;
-    var isPlaying = false;
-    var noteTimer = null;
-    var pentatonic = [130.81, 146.83, 164.81, 196, 220, 261.63, 293.66, 329.63, 392, 440];
+<!-- ================================================
+     JS: Audio (Lo-Fi Ambient)
+     ================================================ -->
+<script>
+(function() {
+  var audioCtx = null;
+  var masterGain = null;
+  var droneOsc = null;
+  var droneGain = null;
+  var isPlaying = false;
+  var noteTimer = null;
+  var pentatonic = [130.81, 146.83, 164.81, 196, 220, 261.63, 293.66, 329.63, 392, 440];
 
-    function initAudio() {
-      if (audioCtx) {
-        // iOS Safari: resume suspended context on user gesture
-        if (audioCtx.state === 'suspended') { audioCtx.resume(); }
-        return;
-      }
+  function initAudio() {
+    if (audioCtx) {
+      if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+      return;
+    }
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+    } catch(e) { return; }
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.06;
+    masterGain.connect(audioCtx.destination);
+
+    droneOsc = audioCtx.createOscillator();
+    droneOsc.type = 'sine';
+    droneOsc.frequency.value = 55;
+    droneGain = audioCtx.createGain();
+    droneGain.gain.value = 0.12;
+    droneOsc.connect(droneGain);
+    droneGain.connect(masterGain);
+    droneOsc.start();
+
+    var harmOsc = audioCtx.createOscillator();
+    harmOsc.type = 'sine';
+    harmOsc.frequency.value = 82.5;
+    var harmGain = audioCtx.createGain();
+    harmGain.gain.value = 0.05;
+    harmOsc.connect(harmGain);
+    harmGain.connect(masterGain);
+    harmOsc.start();
+
+    isPlaying = true;
+    scheduleNote();
+  }
+
+  function scheduleNote() {
+    if (!isPlaying) return;
+    var delay = 3000 + Math.random() * 6000;
+    noteTimer = setTimeout(function() {
+      if (!isPlaying || !audioCtx) return;
       try {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        // iOS Safari starts AudioContext in suspended state — must resume explicitly
-        if (audioCtx.state === 'suspended') { audioCtx.resume(); }
-      } catch(e) { return; }
-      masterGain = audioCtx.createGain();
-      masterGain.gain.value = 0.06;
-      masterGain.connect(audioCtx.destination);
-
-      droneOsc = audioCtx.createOscillator();
-      droneOsc.type = 'sine';
-      droneOsc.frequency.value = 55;
-      droneGain = audioCtx.createGain();
-      droneGain.gain.value = 0.12;
-      droneOsc.connect(droneGain);
-      droneGain.connect(masterGain);
-      droneOsc.start();
-
-      // Subtle harmonic drone
-      var harmOsc = audioCtx.createOscillator();
-      harmOsc.type = 'sine';
-      harmOsc.frequency.value = 82.5;
-      var harmGain = audioCtx.createGain();
-      harmGain.gain.value = 0.05;
-      harmOsc.connect(harmGain);
-      harmGain.connect(masterGain);
-      harmOsc.start();
-
-      isPlaying = true;
+        var freq = pentatonic[Math.floor(Math.random() * pentatonic.length)];
+        var osc = audioCtx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = freq * 0.5;
+        var g = audioCtx.createGain();
+        g.gain.setValueAtTime(0, audioCtx.currentTime);
+        g.gain.linearRampToValueAtTime(0.035, audioCtx.currentTime + 0.4);
+        g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2.8);
+        osc.connect(g);
+        g.connect(masterGain);
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + 2.9);
+      } catch(e) {}
       scheduleNote();
-    }
+    }, delay);
+  }
 
-    function scheduleNote() {
-      if (!isPlaying) return;
-      var delay = 3000 + Math.random() * 6000;
-      noteTimer = setTimeout(function() {
-        if (!isPlaying || !audioCtx) return;
-        try {
-          var freq = pentatonic[Math.floor(Math.random() * pentatonic.length)];
-          var osc = audioCtx.createOscillator();
-          osc.type = 'sine';
-          osc.frequency.value = freq * 0.5;
-          var g = audioCtx.createGain();
-          g.gain.setValueAtTime(0, audioCtx.currentTime);
-          g.gain.linearRampToValueAtTime(0.035, audioCtx.currentTime + 0.4);
-          g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2.8);
-          osc.connect(g);
-          g.connect(masterGain);
-          osc.start(audioCtx.currentTime);
-          osc.stop(audioCtx.currentTime + 2.9);
-        } catch(e) {}
-        scheduleNote();
-      }, delay);
-    }
+  function stopAudio() {
+    isPlaying = false;
+    clearTimeout(noteTimer);
+    try {
+      if (droneOsc) { droneOsc.stop(); droneOsc.disconnect(); droneOsc = null; }
+    } catch(e) {}
+    try {
+      if (audioCtx && audioCtx.state !== 'closed') audioCtx.close();
+    } catch(e) {}
+    audioCtx = null;
+  }
 
-    function stopAudio() {
-      isPlaying = false;
-      clearTimeout(noteTimer);
-      try {
-        if (droneOsc) { droneOsc.stop(); droneOsc.disconnect(); droneOsc = null; }
-      } catch(e) {}
-      try {
-        if (audioCtx && audioCtx.state !== 'closed') audioCtx.close();
-      } catch(e) {}
-      audioCtx = null;
-    }
-
-    var btn = document.createElement('button');
-    btn.id = 'audio-toggle';
-    btn.innerHTML = '&#9835;';
-    btn.title = 'Ambient sound';
-    btn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      e.preventDefault();
-      if (!audioCtx || audioCtx.state === 'closed') {
-        initAudio();
-        btn.classList.add('playing');
-      } else if (isPlaying) {
-        stopAudio();
-        btn.classList.remove('playing');
-        btn.style.opacity = '0';
-      }
-    });
-    btn.addEventListener('mouseenter', function() { btn.style.opacity = '1'; });
-    btn.addEventListener('mouseleave', function() {
-      if (!isPlaying) btn.style.opacity = '0';
-      else btn.style.opacity = '0.22';
-    });
-    document.body.appendChild(btn);
-
-    // Auto-start on first user interaction
-    var autoStarted = false;
-    document.addEventListener('click', function autoStart() {
-      if (autoStarted) return;
-      autoStarted = true;
+  var btn = document.createElement('button');
+  btn.id = 'audio-toggle';
+  btn.innerHTML = '&#9835;';
+  btn.title = 'Ambient sound';
+  btn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!audioCtx || audioCtx.state === 'closed') {
       initAudio();
       btn.classList.add('playing');
-    }, {once: true});
-    document.addEventListener('touchstart', function autoStart() {
-      if (autoStarted) return;
-      autoStarted = true;
-      initAudio();
-      btn.classList.add('playing');
-    }, {once: true});
+    } else if (isPlaying) {
+      stopAudio();
+      btn.classList.remove('playing');
+      btn.style.opacity = '0';
+    }
+  });
+  btn.addEventListener('mouseenter', function() { btn.style.opacity = '1'; });
+  btn.addEventListener('mouseleave', function() {
+    if (!isPlaying) btn.style.opacity = '0';
+    else btn.style.opacity = '0.22';
+  });
+  document.body.appendChild(btn);
+
+  var autoStarted = false;
+  document.addEventListener('click', function autoStart() {
+    if (autoStarted) return;
+    autoStarted = true;
+    initAudio();
+    btn.classList.add('playing');
+  }, {once: true});
+  document.addEventListener('touchstart', function autoStart() {
+    if (autoStarted) return;
+    autoStarted = true;
+    initAudio();
+    btn.classList.add('playing');
+  }, {once: true});
+
+  // Audio hint dismiss
+  (function(){
+    var hint = document.getElementById('audio-hint');
+    if (!hint) return;
+    var gone = false;
+    function dismiss() {
+      if (gone) return; gone = true;
+      hint.style.opacity = '0';
+      hint.style.transform = 'translateX(-50%) translateY(-120%)';
+      setTimeout(function(){ hint.remove(); }, 600);
+    }
+    setTimeout(dismiss, 3500);
+    document.addEventListener('click', dismiss, {once: true});
+    document.addEventListener('touchstart', dismiss, {once: true});
   })();
+})();
+</script>
 
+<!-- ================================================
+     JS: Three.js 3D Particle Sphere
+     ================================================ -->
+<script>
+(function() {
+  if (typeof THREE === 'undefined') return;
 
-  /* -- Three.js 3D Particle Sphere -- */
-  (function() {
-    if (typeof THREE === 'undefined') return;
+  var container = document.createElement('div');
+  container.id = 'three-canvas';
+  document.body.insertBefore(container, document.body.firstChild);
 
-    var container = document.createElement('div');
-    container.id = 'three-canvas';
-    document.body.insertBefore(container, document.body.firstChild);
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.z = 5;
 
-    var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.z = 5;
+  var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
+  container.appendChild(renderer.domElement);
 
-    var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  var group = new THREE.Group();
+  scene.add(group);
+
+  var colorHex = 0xc9a96e;
+
+  // Icosahedron wireframe
+  var icoGeo = new THREE.IcosahedronGeometry(1.8, 2);
+  var edgesGeo = new THREE.EdgesGeometry(icoGeo);
+  var wireframe = new THREE.LineSegments(
+    edgesGeo,
+    new THREE.LineBasicMaterial({ color: colorHex, transparent: true, opacity: 0.09 })
+  );
+  group.add(wireframe);
+
+  // Surface dots
+  var dotsGeo = new THREE.IcosahedronGeometry(1.8, 3);
+  var dotsPositions = dotsGeo.attributes.position.array;
+  var sampled = [];
+  for (var i = 0; i < dotsPositions.length; i += 6) {
+    sampled.push(dotsPositions[i], dotsPositions[i+1], dotsPositions[i+2]);
+  }
+  var ptsGeo = new THREE.BufferGeometry();
+  ptsGeo.setAttribute('position', new THREE.Float32BufferAttribute(sampled, 3));
+  var ptsMat = new THREE.PointsMaterial({ color: colorHex, size: 0.025, transparent: true, opacity: 0.22 });
+  var surfacePts = new THREE.Points(ptsGeo, ptsMat);
+  group.add(surfacePts);
+
+  // Floating ambient particles
+  var floatCount = 80;
+  var floatPositions = new Float32Array(floatCount * 3);
+  var floatData = [];
+  for (var j = 0; j < floatCount; j++) {
+    var theta = Math.random() * Math.PI * 2;
+    var phi = Math.acos(2 * Math.random() - 1);
+    var r = 1.8 + Math.random() * 1.2;
+    floatPositions[j*3] = r * Math.sin(phi) * Math.cos(theta);
+    floatPositions[j*3+1] = r * Math.sin(phi) * Math.sin(theta);
+    floatPositions[j*3+2] = r * Math.cos(phi);
+    floatData.push({
+      baseX: floatPositions[j*3],
+      baseY: floatPositions[j*3+1],
+      baseZ: floatPositions[j*3+2],
+      speed: 0.0005 + Math.random() * 0.002,
+      phase: Math.random() * Math.PI * 2,
+      amp: 0.1 + Math.random() * 0.3
+    });
+  }
+  var floatGeo = new THREE.BufferGeometry();
+  floatGeo.setAttribute('position', new THREE.Float32BufferAttribute(floatPositions, 3));
+  var floatPts = new THREE.Points(
+    floatGeo,
+    new THREE.PointsMaterial({ color: colorHex, size: 0.018, transparent: true, opacity: 0.13 })
+  );
+  group.add(floatPts);
+
+  // Subtle ring
+  var ringGeo = new THREE.TorusGeometry(2.1, 0.015, 16, 80);
+  var ring = new THREE.Mesh(
+    ringGeo,
+    new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.06 })
+  );
+  ring.rotation.x = Math.PI / 3;
+  group.add(ring);
+
+  var time = 0;
+  function animate() {
+    requestAnimationFrame(animate);
+    time += 0.003;
+    group.rotation.x += 0.0008;
+    group.rotation.y += 0.0012;
+
+    var posArray = floatPts.geometry.attributes.position.array;
+    for (var k = 0; k < floatData.length; k++) {
+      var fd = floatData[k];
+      posArray[k*3] = fd.baseX + Math.sin(time * 3 + fd.phase) * fd.amp;
+      posArray[k*3+1] = fd.baseY + Math.cos(time * 2.5 + fd.phase) * fd.amp;
+      posArray[k*3+2] = fd.baseZ + Math.sin(time * 2 + fd.phase + 1) * fd.amp;
+    }
+    floatPts.geometry.attributes.position.needsUpdate = true;
+
+    ring.rotation.z += 0.001;
+
+    renderer.render(scene, camera);
+  }
+
+  window.addEventListener('resize', function() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setClearColor(0x000000, 0);
-    container.appendChild(renderer.domElement);
+  });
 
-    var group = new THREE.Group();
-    scene.add(group);
+  animate();
+})();
+</script>
 
-    var colorHex = 0xc9a96e;
+<!-- ================================================
+     JS: Digital Clock
+     ================================================ -->
+<script>
+(function() {
+  var hhmmEl = document.getElementById('clock-hhmm');
+  var ssEl = document.getElementById('clock-ss');
+  var quietEl = document.getElementById('clock-quiet');
+  var startTime = Date.now();
 
-    // Icosahedron wireframe
-    var icoGeo = new THREE.IcosahedronGeometry(1.8, 2);
-    var edgesGeo = new THREE.EdgesGeometry(icoGeo);
-    var wireframe = new THREE.LineSegments(
-      edgesGeo,
-      new THREE.LineBasicMaterial({ color: colorHex, transparent: true, opacity: 0.09 })
-    );
-    group.add(wireframe);
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
 
-    // Surface dots on icosahedron
-    var dotsGeo = new THREE.IcosahedronGeometry(1.8, 3);
-    var dotsPositions = dotsGeo.attributes.position.array;
-    var sampled = [];
-    for (var i = 0; i < dotsPositions.length; i += 6) {
-      sampled.push(dotsPositions[i], dotsPositions[i+1], dotsPositions[i+2]);
+  function formatDuration(ms) {
+    var totalSec = Math.floor(ms / 1000);
+    var h = Math.floor(totalSec / 3600);
+    var m = Math.floor((totalSec % 3600) / 60);
+    var s = totalSec % 60;
+    var parts = [];
+    if (h > 0) parts.push(h + ' 时');
+    if (m > 0) parts.push(m + ' 分');
+    parts.push(s + ' 秒');
+    return parts.join(' ');
+  }
+
+  function tick() {
+    var now = new Date();
+    hhmmEl.textContent = pad(now.getHours()) + ':' + pad(now.getMinutes());
+    ssEl.textContent = pad(now.getSeconds());
+    var elapsed = Date.now() - startTime;
+    quietEl.textContent = '你已在此停留 ' + formatDuration(elapsed);
+  }
+
+  tick();
+  setInterval(tick, 1000);
+})();
+</script>
+
+<!-- ================================================
+     JS: Typewriter Monologue Engine
+     ================================================ -->
+<script>
+(function() {
+  var monologues = [
+    "凌晨三点。屏幕亮着。\n没有人说话，但一切都在呼吸。",
+    "代码写完了，bug 还在。\n像极了某些说不出口的话。",
+    "窗外没有声音。\n城市睡着了，但路由器还醒着。",
+    "一杯水从热放到凉。\n日历翻过去，什么都没发生。\n这样的一天，也很好。",
+    "旧电脑的风扇声像海。\n我把耳朵贴上去，\n听见 2005 年的冬天。",
+    "有人问你在想什么。\n你说没什么。\n其实你在想：\n为什么琥珀色的光这么好看。",
+    "很多话不需要说。\n说了就轻了。",
+    "凌晨四点四十八分。\n这只猫在我腿上睡着了。\n我不动。\n世界可以等我。",
+    "调试了一天。\n最后发现少了一个分号。\n像人生里的某些错过。",
+    "关了灯。屏幕光打在手背上。\n青色和琥珀色。\n比白天更真实。",
+    "今天没有做什么了不起的事。\n但也没有辜负自己。\n这样就够了。",
+    "夜深了。\n楼下便利店还亮着灯。\n这个世界上总有人在等你。",
+    "有些话只适合打在屏幕上。\n然后删掉。\n然后打一遍。\n然后再删掉。",
+    "你盯着光标。光标也盯着你。\n你们都知道这一刻不会重来。",
+    "夏天快结束了。\n风扇还在转。\n你还在。\n一切都好。",
+  ];
+
+  var textEl = document.getElementById('typewriter-text');
+  var cursorEl = document.getElementById('typewriter-cursor');
+  var currentIdx = Math.floor(Math.random() * monologues.length);
+  var charIdx = 0;
+  var isTyping = false;
+  var typingSpeed = 42;
+  var pauseAfterDone = 6000;
+  var eraseSpeed = 18;
+  var pauseBeforeNext = 2000;
+
+  function shuffleNext() {
+    var next;
+    do { next = Math.floor(Math.random() * monologues.length); }
+    while (next === currentIdx && monologues.length > 1);
+    currentIdx = next;
+    charIdx = 0;
+  }
+
+  function typeChar() {
+    if (!isTyping) return;
+    var text = monologues[currentIdx];
+    if (charIdx < text.length) {
+      textEl.textContent = text.slice(0, charIdx + 1);
+      charIdx++;
+      var delay = typingSpeed;
+      // Slightly longer pause on newlines and punctuation
+      var ch = text[charIdx - 1];
+      if (ch === '\n') delay = typingSpeed * 3;
+      else if ('。，、；：！？…—'.indexOf(ch) >= 0) delay = typingSpeed * 2.5;
+      setTimeout(typeChar, delay);
+    } else {
+      // Done typing
+      cursorEl.classList.add('paused');
+      setTimeout(startErase, pauseAfterDone);
     }
-    var ptsGeo = new THREE.BufferGeometry();
-    ptsGeo.setAttribute('position', new THREE.Float32BufferAttribute(sampled, 3));
-    var ptsMat = new THREE.PointsMaterial({ color: colorHex, size: 0.025, transparent: true, opacity: 0.22 });
-    var surfacePts = new THREE.Points(ptsGeo, ptsMat);
-    group.add(surfacePts);
+  }
 
-    // Floating ambient particles around sphere
-    var floatCount = 80;
-    var floatPositions = new Float32Array(floatCount * 3);
-    var floatData = [];
-    for (var j = 0; j < floatCount; j++) {
-      var theta = Math.random() * Math.PI * 2;
-      var phi = Math.acos(2 * Math.random() - 1);
-      var r = 1.8 + Math.random() * 1.2;
-      floatPositions[j*3] = r * Math.sin(phi) * Math.cos(theta);
-      floatPositions[j*3+1] = r * Math.sin(phi) * Math.sin(theta);
-      floatPositions[j*3+2] = r * Math.cos(phi);
-      floatData.push({
-        baseX: floatPositions[j*3],
-        baseY: floatPositions[j*3+1],
-        baseZ: floatPositions[j*3+2],
-        speed: 0.0005 + Math.random() * 0.002,
-        phase: Math.random() * Math.PI * 2,
-        amp: 0.1 + Math.random() * 0.3
-      });
+  function startTyping() {
+    isTyping = true;
+    cursorEl.classList.remove('paused');
+    textEl.textContent = '';
+    charIdx = 0;
+    typeChar();
+  }
+
+  function startErase() {
+    isTyping = true;
+    cursorEl.classList.remove('paused');
+    eraseLoop();
+  }
+
+  function eraseLoop() {
+    if (!isTyping) return;
+    var text = monologues[currentIdx];
+    if (charIdx > 0) {
+      charIdx--;
+      textEl.textContent = text.slice(0, charIdx);
+      setTimeout(eraseLoop, eraseSpeed);
+    } else {
+      isTyping = false;
+      cursorEl.classList.add('paused');
+      shuffleNext();
+      setTimeout(startTyping, pauseBeforeNext);
     }
-    var floatGeo = new THREE.BufferGeometry();
-    floatGeo.setAttribute('position', new THREE.Float32BufferAttribute(floatPositions, 3));
-    var floatPts = new THREE.Points(
-      floatGeo,
-      new THREE.PointsMaterial({ color: colorHex, size: 0.018, transparent: true, opacity: 0.13 })
-    );
-    group.add(floatPts);
+  }
 
-    // Second subtle ring
-    var ringGeo = new THREE.TorusGeometry(2.1, 0.015, 16, 80);
-    var ring = new THREE.Mesh(
-      ringGeo,
-      new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.06 })
-    );
-    ring.rotation.x = Math.PI / 3;
-    group.add(ring);
+  // Start on load
+  startTyping();
+})();
+</script>
 
-    var time = 0;
-    function animate() {
-      requestAnimationFrame(animate);
-      time += 0.003;
-      group.rotation.x += 0.0008;
-      group.rotation.y += 0.0012;
+<!-- ================================================
+     JS: Poetry Card Engine
+     ================================================ -->
+<script>
+(function() {
+  var poems = [
+    {
+      title: '《夜坐》',
+      body: '夜坐空林寂\n松风直似秋',
+      author: '王维',
+    },
+    {
+      title: '《独坐敬亭山》',
+      body: '众鸟高飞尽\n孤云独去闲\n相看两不厌\n只有敬亭山',
+      author: '李白',
+    },
+    {
+      title: '《竹里馆》',
+      body: '独坐幽篁里\n弹琴复长啸\n深林人不知\n明月来相照',
+      author: '王维',
+    },
+    {
+      title: '《江雪》',
+      body: '千山鸟飞绝\n万径人踪灭\n孤舟蓑笠翁\n独钓寒江雪',
+      author: '柳宗元',
+    },
+    {
+      title: '《滁州西涧》',
+      body: '独怜幽草涧边生\n上有黄鹂深树鸣\n春潮带雨晚来急\n野渡无人舟自横',
+      author: '韦应物',
+    },
+    {
+      title: '《题破山寺后禅院》',
+      body: '清晨入古寺\n初日照高林\n曲径通幽处\n禅房花木深',
+      author: '常建',
+    },
+    {
+      title: '《终南别业》',
+      body: '行到水穷处\n坐看云起时',
+      author: '王维',
+    },
+    {
+      title: '『一握の砂』より',
+      body: 'はたらけど\nはたらけど猶\nわが生活楽にならざり\nぢつと手を見る',
+      author: '石川啄木',
+    },
+    {
+      title: '《星》',
+      body: '夜の底が\n白くなった\n星が\nひとつ\nまたひとつ',
+      author: '金子みすゞ',
+    },
+    {
+      title: '《月下独酌》',
+      body: '花间一壶酒\n独酌无相亲\n举杯邀明月\n对影成三人',
+      author: '李白',
+    },
+    {
+      title: '《山居秋暝》',
+      body: '空山新雨后\n天气晚来秋\n明月松间照\n清泉石上流',
+      author: '王维',
+    },
+    {
+      title: 'The Listeners',
+      body: '"Tell them I came, and no one answered,\nThat I kept my word," he said.',
+      author: 'Walter de la Mare',
+    },
+  ];
 
-      // Animate floating particles
-      var posArray = floatPts.geometry.attributes.position.array;
-      for (var k = 0; k < floatData.length; k++) {
-        var fd = floatData[k];
-        posArray[k*3] = fd.baseX + Math.sin(time * 3 + fd.phase) * fd.amp;
-        posArray[k*3+1] = fd.baseY + Math.cos(time * 2.5 + fd.phase) * fd.amp;
-        posArray[k*3+2] = fd.baseZ + Math.sin(time * 2 + fd.phase + 1) * fd.amp;
-      }
-      floatPts.geometry.attributes.position.needsUpdate = true;
+  var card = document.getElementById('poetry-card');
+  var titleEl = document.getElementById('poetry-title');
+  var bodyEl = document.getElementById('poetry-body');
+  var authorEl = document.getElementById('poetry-author');
+  var currentIdx = -1;
 
-      ring.rotation.z += 0.001;
+  function showPoem(idx) {
+    var p = poems[idx];
+    titleEl.textContent = p.title;
+    bodyEl.textContent = p.body;
+    authorEl.textContent = '— ' + p.author;
+  }
 
-      renderer.render(scene, camera);
-    }
+  function nextPoem() {
+    var next;
+    do { next = Math.floor(Math.random() * poems.length); }
+    while (next === currentIdx && poems.length > 1);
+    currentIdx = next;
+    // Fade transition
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(6px)';
+    setTimeout(function() {
+      showPoem(currentIdx);
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0)';
+    }, 350);
+  }
 
-    window.addEventListener('resize', function() {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+  card.addEventListener('click', nextPoem);
 
-    animate();
-  })();
-
-
-  /* -- 3D Card Tilt Effect -- */
-  (function() {
-    var cards = document.querySelectorAll('.project-card, .repo-card, .poem, .panel, .crt-frame, .msg, .log-entry');
-    if (cards.length === 0) return;
-
-    cards.forEach(function(card) {
-      card.addEventListener('mouseenter', function() {
-        card.style.transition = 'transform 0.1s ease-out, box-shadow 0.1s ease-out';
-      });
-      card.addEventListener('mousemove', function(e) {
-        var rect = card.getBoundingClientRect();
-        var x = e.clientX - rect.left;
-        var y = e.clientY - rect.top;
-        var cx = rect.width / 2;
-        var cy = rect.height / 2;
-        var rx = ((y - cy) / cy) * -5;
-        var ry = ((x - cx) / cx) * 5;
-        card.style.transform = 'perspective(600px) rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) translateY(-2px)';
-      });
-      card.addEventListener('mouseleave', function() {
-        card.style.transition = 'transform 0.5s cubic-bezier(0.33, 1, 0.68, 1), box-shadow 0.5s cubic-bezier(0.33, 1, 0.68, 1)';
-        card.style.transform = 'perspective(600px) rotateX(0) rotateY(0) translateY(0)';
-      });
-    });
-  })();
-
-  /* -- Guestbook -- */
-  (function() {
-    var messagesEl = document.getElementById('gb-messages');
-    var nameEl = document.getElementById('gb-name');
-    var msgEl = document.getElementById('gb-msg');
-    var submitBtn = document.getElementById('gb-submit');
-    var statusEl = document.getElementById('gb-status');
-
-    function loadMessages() {
-      fetch('/api/guestbook?limit=20')
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          if (!data.messages || data.messages.length === 0) {
-            messagesEl.innerHTML = '<div class="gb-empty">— 还没有留言，来做第一个 —</div>';
-            return;
-          }
-          var html = '';
-          data.messages.forEach(function(m) {
-            var time = m.created_at ? m.created_at.replace('T', ' ').slice(0, 16) : '';
-            html += '<div class="gb-msg-card">'
-              + '<div class="gb-msg-name">' + (m.name || 'anonymous') + '</div>'
-              + '<div class="gb-msg-text">' + m.message + '</div>'
-              + '<div class="gb-msg-time">' + time + '</div>'
-              + '</div>';
-          });
-          messagesEl.innerHTML = html;
-        })
-        .catch(function() {
-          messagesEl.innerHTML = '<div class="gb-empty">— 离线模式，留言板暂不可用 —</div>';
-        });
-    }
-
-    submitBtn.addEventListener('click', function() {
-      var msg = msgEl.value.trim();
-      if (!msg) { statusEl.textContent = '内容不能为空'; statusEl.className = 'gb-status error'; return; }
-      submitBtn.disabled = true;
-      statusEl.textContent = 'sending...';
-      statusEl.className = 'gb-status';
-      fetch('/api/guestbook', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: nameEl.value.trim(), message: msg })
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.success) {
-          msgEl.value = '';
-          statusEl.textContent = 'sent.';
-          statusEl.className = 'gb-status success';
-          loadMessages();
-        } else {
-          statusEl.textContent = data.error || 'failed';
-          statusEl.className = 'gb-status error';
-        }
-      })
-      .catch(function() {
-        statusEl.textContent = 'network error';
-        statusEl.className = 'gb-status error';
-      })
-      .finally(function() { submitBtn.disabled = false; });
-    });
-
-    loadMessages();
-  })();
-
+  // Show first poem
+  currentIdx = Math.floor(Math.random() * poems.length);
+  showPoem(currentIdx);
+  card.style.transition = 'opacity 0.35s ease, transform 0.35s ease, border-color 0.4s ease, box-shadow 0.4s ease';
+})();
 </script>
 </body>
 </html>
