@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>暮色线 · 此刻的地球 — twilit</title>
+<meta name="description" content="暮色线 · 此刻的地球：实时昼夜分界，可拖动时间看晨昏线扫过世界。">
+<link rel="canonical" href="https://twilit.site/terminator.html">
+<meta name="theme-color" content="#080b10">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="twilit">
+<meta property="og:title" content="暮色线 · 此刻的地球 — twilit">
+<meta property="og:description" content="暮色线 · 此刻的地球：实时昼夜分界，可拖动时间看晨昏线扫过世界。">
+<meta property="og:url" content="https://twilit.site/terminator.html">
+<meta property="og:image" content="https://twilit.site/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="暮色线 · 此刻的地球 — twilit">
+<meta name="twitter:description" content="暮色线 · 此刻的地球：实时昼夜分界，可拖动时间看晨昏线扫过世界。">
+<meta name="twitter:image" content="https://twilit.site/og.png">
+<style>
+  :root{
+    --bg:#080b10; --amber:#c9a96e; --amber-dim:#7a6543; --amber-pale:#e8d5b0;
+    --text:#b8b4a8; --text-dim:#6b6760; --line:rgba(201,169,110,0.14);
+    --card:#0d1119;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--text); font-family:'Noto Serif SC',serif;
+    min-height:100vh; padding:26px 16px 46px; position:relative; overflow-x:hidden;
+  }
+  body::before{
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:100;
+    background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(201,169,110,0.03) 2px,rgba(201,169,110,0.03) 4px);
+  }
+  body::after{
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:99;
+    background:radial-gradient(ellipse at center,transparent 58%,rgba(8,11,16,0.7) 100%);
+  }
+  .wrap{max-width:1040px; margin:0 auto; position:relative; z-index:1}
+  .topbar{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-family:'Space Mono',monospace; font-size:0.68rem; letter-spacing:0.12em;
+    color:var(--text-dim); margin-bottom:14px;
+  }
+  .topbar a{color:var(--amber-dim); text-decoration:none}
+  .topbar a:hover{color:var(--amber)}
+  .stage{position:relative; border:1px solid var(--line); background:#070a0f}
+  canvas{width:100%; height:auto; display:block}
+  .badge{
+    position:absolute; top:10px; left:12px; font-family:'Space Mono',monospace;
+    font-size:0.6rem; letter-spacing:0.14em; color:var(--amber-dim);
+    background:rgba(8,11,16,0.7); padding:3px 7px; border:1px solid var(--line);
+  }
+  .badge.travel{color:#f0b429; border-color:rgba(240,180,41,0.4)}
+  .controls{
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    margin-top:12px; font-family:'Space Mono',monospace; font-size:0.68rem; color:var(--text-dim);
+  }
+  input[type=range]{flex:1 1 240px; min-width:180px; accent-color:#7a6543}
+  button{
+    background:#12151d; color:var(--text); border:1px solid var(--line); border-radius:6px;
+    padding:7px 12px; font-family:'Space Mono',monospace; font-size:0.68rem; letter-spacing:0.08em; cursor:pointer;
+  }
+  button:hover{border-color:var(--amber-dim); color:var(--amber-pale)}
+  button.on{background:#1d2a3a; border-color:#2f4a63; color:#cfe6f5}
+  .grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:10px; margin-top:14px}
+  .card{background:var(--card); border:1px solid var(--line); padding:11px 13px}
+  .card .k{font-family:'Space Mono',monospace; font-size:0.6rem; letter-spacing:0.1em; color:var(--text-dim); margin-bottom:6px}
+  .card .v{font-size:0.95rem; color:var(--amber-pale); font-family:'Space Mono',monospace; letter-spacing:0.04em}
+  .card .v small{font-family:'Noto Serif SC',serif; color:var(--text); font-size:0.78rem; letter-spacing:0.02em}
+  .note{
+    margin-top:14px; font-family:'Space Mono',monospace; font-size:0.6rem; line-height:1.9;
+    color:var(--text-dim); letter-spacing:0.04em;
+  }
+  .note b{color:var(--amber-dim); font-weight:400}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <span>twilit · 暮色线</span>
+    <a href="/">← 返回暮色</a>
+  </div>
+
+  <div class="stage">
+    <div class="badge" id="badge">LIVE · 实时</div>
+    <canvas id="map"></canvas>
+  </div>
+
+  <div class="controls">
+    <button id="btnNow" class="on">现在</button>
+    <button id="btnPlay">播放 24 小时</button>
+    <button id="btnGrid" class="on">经纬网</button>
+    <input type="range" id="time" min="-720" max="720" step="5" value="0">
+    <span id="timeLabel" style="min-width:74px;text-align:right">±0 min</span>
+  </div>
+
+  <div class="grid2">
+    <div class="card"><div class="k">世界时 / UTC</div><div class="v" id="vUtc">—</div></div>
+    <div class="card"><div class="k">太阳直射点</div><div class="v" id="vSub">—</div></div>
+    <div class="card"><div class="k">夜半球占比</div><div class="v" id="vNight">—</div></div>
+    <div class="card"><div class="k">你的位置</div><div class="v" id="vYou">—</div></div>
+    <div class="card"><div class="k">你那里的日出 / 日落</div><div class="v" id="vSun">—</div></div>
+    <div class="card"><div class="k">此刻同在这个页面的人</div><div class="v" id="vPeople">—</div></div>
+  </div>
+
+  <div class="note">
+    <b>数据说明</b>：晨昏线由太阳位置实时算出（不调用任何天气/天文接口）；<br>
+    来访位置只记录<b>模糊到约 55 公里的格点</b>（0.5° 取整），1 小时后自动过期，不记录 IP、不显示精确位置。
+  </div>
+</div>
+
+<script src="_data/world.js"></script>
+<script src="_assets/terminator.js"></script>
+<script>
+(function () {
+  'use strict';
+  var T = window.Terminator;
+  var $ = function (id) { return document.getElementById(id); };
+
+  var W = 1000, H = 500, SCALE = 2;
+  var MW = 500, MH = 250;              // 遮罩用半分辨率，再平滑放大（够用且快）
+  var cv = $('map'), ctx = cv.getContext('2d');
+  var off = document.createElement('canvas');
+  off.width = MW; off.height = MH;
+  var octx = off.getContext('2d');
+
+  var C = {
+    ocean: '#070a10', land: '#141922', landLine: 'rgba(201,169,110,0.30)',
+    grid: 'rgba(201,169,110,0.07)', amber: '#c9a96e', pale: '#e8d5b0', dim: '#7a6543'
+  };
+
+  var world = null, dots = [], me = null;
+  var offsetMin = 0, playing = false, raf = null, showGrid = true;
+
+  var px = function (lon) { return (lon + 180) / 360 * W; };
+  var py = function (lat) { return (90 - lat) / 180 * H; };
+
+  /* ---------------- 绘制 ---------------- */
+  function draw(date) {
+    cv.width = W * SCALE; cv.height = H * SCALE;
+    ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
+
+    // 海洋
+    ctx.fillStyle = C.ocean;
+    ctx.fillRect(0, 0, W, H);
+
+    // 陆地
+    if (world) {
+      ctx.beginPath();
+      for (var i = 0; i < world.rings.length; i++) {
+        var r = world.rings[i];
+        ctx.moveTo(px(r[0]), py(r[1]));
+        for (var j = 2; j < r.length; j += 2) ctx.lineTo(px(r[j]), py(r[j + 1]));
+        ctx.closePath();
+      }
+      ctx.fillStyle = C.land;
+      ctx.fill();
+      ctx.strokeStyle = C.landLine;
+      ctx.lineWidth = 0.6;
+      ctx.stroke();
+    }
+
+    // 经纬网
+    if (showGrid) {
+      ctx.strokeStyle = C.grid; ctx.lineWidth = 0.5;
+      for (var lon = -180; lon <= 180; lon += 30) {
+        ctx.beginPath(); ctx.moveTo(px(lon), 0); ctx.lineTo(px(lon), H); ctx.stroke();
+      }
+      for (var lat = -60; lat <= 60; lat += 30) {
+        ctx.beginPath(); ctx.moveTo(0, py(lat)); ctx.lineTo(W, py(lat)); ctx.stroke();
+      }
+      ctx.strokeStyle = 'rgba(201,169,110,0.12)';
+      ctx.beginPath(); ctx.moveTo(0, py(0) + 0.5); ctx.lineTo(W, py(0) + 0.5); ctx.stroke();
+    }
+
+    // 夜半球 + 晨昏暖光带（半分辨率算，平滑放大）
+    var m = T.masks(MW, MH, date);
+    var img = octx.createImageData(MW, MH);
+    var d = img.data;
+    for (var k = 0, n = MW * MH; k < n; k++) {
+      var a = m.night[k] / 255 * 0.68;          // 黑夜压暗
+      d[k * 4] = 3; d[k * 4 + 1] = 5; d[k * 4 + 2] = 11;
+      d[k * 4 + 3] = Math.round(a * 255);
+    }
+    octx.putImageData(img, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(off, 0, 0, W, H);
+
+    var img2 = octx.createImageData(MW, MH);
+    var d2 = img2.data;
+    for (var k2 = 0, n2 = MW * MH; k2 < n2; k2++) {
+      d2[k2 * 4] = 201; d2[k2 * 4 + 1] = 169; d2[k2 * 4 + 2] = 110;
+      d2[k2 * 4 + 3] = Math.round(m.rim[k2] / 255 * 150);   // 晨昏线附近的琥珀光带
+    }
+    octx.putImageData(img2, 0, 0);
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.drawImage(off, 0, 0, W, H);
+    ctx.globalCompositeOperation = 'source-over';
+
+    // 晨昏线（清晰的那条 0° 线）
+    ctx.strokeStyle = 'rgba(232,213,176,0.55)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    var prev = null;
+    for (var lon2 = -180; lon2 <= 180; lon2 += 1) {
+      var la = T.terminatorLatitude(lon2, date);
+      var x = px(lon2), y = py(la);
+      if (prev === null || Math.abs(la - prev) > 60) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+      prev = la;
+    }
+    ctx.stroke();
+
+    // 直射点
+    var sub = T.subsolarPoint(date);
+    var sx = px(sub.lon), sy = py(sub.lat);
+    ctx.strokeStyle = 'rgba(232,213,176,0.75)'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(sx - 9, sy); ctx.lineTo(sx - 3, sy); ctx.moveTo(sx + 3, sy); ctx.lineTo(sx + 9, sy);
+    ctx.moveTo(sx, sy - 9); ctx.lineTo(sx, sy - 3); ctx.moveTo(sx, sy + 3); ctx.lineTo(sx, sy + 9);
+    ctx.stroke();
+    ctx.fillStyle = C.pale;
+    ctx.beginPath(); ctx.arc(sx, sy, 1.6, 0, Math.PI * 2); ctx.fill();
+
+    // 其他人的点
+    dots.forEach(function (p) {
+      if (p.you) return;
+      ctx.fillStyle = 'rgba(201,169,110,0.55)';
+      ctx.beginPath(); ctx.arc(px(p.lon), py(p.lat), 2.2, 0, Math.PI * 2); ctx.fill();
+    });
+    // 你自己的点
+    if (me) {
+      var mx = px(me.lon), my = py(me.lat);
+      ctx.strokeStyle = 'rgba(201,169,110,0.55)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(mx, my, 6, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = C.amber;
+      ctx.beginPath(); ctx.arc(mx, my, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.font = '11px "Space Mono", monospace';
+      ctx.fillStyle = 'rgba(232,213,176,0.9)';
+      ctx.fillText('你在这里', mx + 9, my + 4);
+    }
+  }
+
+  /* ---------------- 读数 ---------------- */
+  function currentDate() { return new Date(Date.now() + offsetMin * 60000); }
+
+  function readouts(date) {
+    var sub = T.subsolarPoint(date);
+    $('vUtc').textContent = T.describe(date).utc;
+    $('vSub').textContent = Math.abs(sub.lat).toFixed(1) + '°' + (sub.lat >= 0 ? 'N' : 'S')
+      + ' · ' + Math.abs(sub.lon).toFixed(1) + '°' + (sub.lon >= 0 ? 'E' : 'W');
+    var m = T.nightMask(180, 90, date);
+    var night = 0;
+    for (var i = 0; i < m.length; i++) if (m[i] > 0) night++;
+    $('vNight').textContent = (night / m.length * 100).toFixed(1) + '%';
+    if (offsetMin !== 0) $('vNight').innerHTML += ' <small>（时间旅行中）</small>';
+
+    if (me) {
+      $('vYou').innerHTML = (me.city || me.country || '未知') + ' <small>'
+        + me.lat.toFixed(1) + '°, ' + me.lon.toFixed(1) + '°（已模糊）</small>';
+      var st = T.sunTimes(me.lat, me.lon, date);
+      if (st.polar === 'day') $('vSun').textContent = '极昼';
+      else if (st.polar === 'night') $('vSun').textContent = '极夜';
+      else $('vSun').innerHTML = T.minutesToLocalClock(st.sunrise, date) + ' / ' + T.minutesToLocalClock(st.sunset, date)
+        + ' <small>昼长 ' + st.dayLength.toFixed(1) + ' 小时</small>';
+    } else {
+      $('vYou').innerHTML = '<small>未获取到（仅线上生效）</small>';
+      $('vSun').innerHTML = '<small>—</small>';
+    }
+
+    var others = dots.filter(function (p) { return !p.you; }).length;
+    $('vPeople').innerHTML = others > 0
+      ? others + ' <small>个点正亮着（1 小时内的记录）</small>'
+      : '<small>此刻还没有别人（你是第一个）</small>';
+
+    var travel = offsetMin !== 0;
+    $('badge').textContent = travel
+      ? 'TIME TRAVEL · ' + (offsetMin > 0 ? '+' : '−') + fmtOffset(Math.abs(offsetMin))
+      : 'LIVE · 实时';
+    $('badge').className = 'badge' + (travel ? ' travel' : '');
+  }
+  function fmtOffset(min) {
+    var h = Math.floor(min / 60), mm = Math.round(min % 60);
+    return (h ? h + ' 小时 ' : '') + (mm ? mm + ' 分' : (h ? '' : '0 分'));
+  }
+
+  function render() {
+    var d = currentDate();
+    draw(d);
+    readouts(d);
+  }
+
+  /* ---------------- 时间旅行 ---------------- */
+  function setOffset(min, fromSlider) {
+    offsetMin = Math.max(-720, Math.min(720, Math.round(min)));
+    if (!fromSlider) $('time').value = offsetMin;
+    $('timeLabel').textContent = offsetMin === 0 ? '±0 min'
+      : (offsetMin > 0 ? '+' : '−') + fmtOffset(Math.abs(offsetMin));
+    $('btnNow').className = offsetMin === 0 ? 'on' : '';
+    render();
+  }
+  function play24() {
+    if (playing) { stopPlay(); return; }
+    playing = true; $('btnPlay').className = 'on'; $('btnPlay').textContent = '停止';
+    var t0 = performance.now(), dur = 24000;
+    (function tick(now) {
+      if (!playing) return;
+      var p = Math.min(1, (now - t0) / dur);
+      setOffset(-720 + p * 1440, false);
+      if (p < 1) raf = requestAnimationFrame(tick);
+      else { stopPlay(); setOffset(0, false); }
+    })(t0);
+  }
+  function stopPlay() {
+    playing = false; $('btnPlay').className = ''; $('btnPlay').textContent = '播放 24 小时';
+  }
+
+  /* ---------------- 取数据 ---------------- */
+  function loadWorld() {
+    // 地图数据由 <script src="_data/world.js"> 引入（window.TWILIT_WORLD）
+    // 用 script 而不是 fetch：本地 file:// 双击打开时 fetch 会被 CORS 拦掉
+    return Promise.resolve().then(function () {
+      world = window.TWILIT_WORLD || null;
+      if (!world) console.warn('[terminator] 世界轮廓数据未加载');
+    });
+  }
+  function presence() {
+    // POST 记录自己，GET 取所有人的点；任何一步失败都静默降级（本地打开时必然失败）
+    fetch('/api/presence', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { if (j && j.you) { me = j.you; } })
+      .catch(function () {})
+      .then(function () {
+        return fetch('/api/presence').then(function (r) { return r.json(); }).catch(function () { return null; });
+      })
+      .then(function (j) {
+        if (j && j.dots) { dots = j.dots; }
+        if (me) dots = dots.concat([{ lat: me.lat, lon: me.lon, you: true }]);
+        render();
+      })
+      .catch(function () {});
+  }
+
+  /* ---------------- 启动 ---------------- */
+  $('btnNow').onclick = function () { stopPlay(); setOffset(0, false); };
+  $('btnPlay').onclick = play24;
+  $('btnGrid').onclick = function () {
+    showGrid = !showGrid;
+    $('btnGrid').className = showGrid ? 'on' : '';
+    render();
+  };
+  $('time').oninput = function () { stopPlay(); setOffset(parseInt(this.value, 10), true); };
+  window.addEventListener('resize', function () { render(); });
+
+  loadWorld().then(function () {
+    render();
+    presence();
+    // 实时模式下每分钟刷新一次（晨昏线每分钟移动约 0.25°）
+    setInterval(function () { if (offsetMin === 0 && !playing) render(); }, 60000);
+  });
+})();
+</script>
+</body>
+</html>

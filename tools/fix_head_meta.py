@@ -28,6 +28,7 @@ DESC = {
     "signal.html": "1999 异常信号终端：解码来自另一个时间线的神秘信息。",
     "y2k.html": "Y2K 晶体管诊断仪：复古系统诊断工具，检查晶体管健康状态。",
     "dossier.html": "收录档案 · 1999：把你的这次到访生成一张异常档案卡，可存成图片。",
+    "terminator.html": "暮色线 · 此刻的地球：实时昼夜分界，可拖动时间看晨昏线扫过世界。",
     "astro.html": "twilit 星象页。",
 }
 DEFAULT_DESC = "twilit — 虚室生白。twilight falls on all things equally."
