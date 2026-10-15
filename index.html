@@ -2,8 +2,25 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>twilit — 虚室生白</title>
+<meta name="description" content="虚室生白——一段安静的独白、几首旧诗，与实时合成的暮色环境音。">
+<link rel="canonical" href="https://twilit.site/">
+<meta name="theme-color" content="#080b10">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="twilit">
+<meta property="og:title" content="twilit — 虚室生白">
+<meta property="og:description" content="虚室生白——一段安静的独白、几首旧诗，与实时合成的暮色环境音。">
+<meta property="og:url" content="https://twilit.site/">
+<meta property="og:image" content="https://twilit.site/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="twilit — 虚室生白">
+<meta name="twitter:description" content="虚室生白——一段安静的独白、几首旧诗，与实时合成的暮色环境音。">
+<meta name="twitter:image" content="https://twilit.site/og.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=Space+Mono&display=swap');
 
@@ -442,7 +459,6 @@
     50%      { opacity: 1;    box-shadow: 0 0 8px rgba(201,169,110,0.5); }
   }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
@@ -730,7 +746,10 @@
 
 <!-- ================================================
      JS: Three.js 3D Particle Sphere
+     注：three.js 原先放在 <head> 里会阻塞首屏，现移到使用它的脚本之前；
+         下面的脚本里有 typeof THREE 兜底，CDN 挂了也只是少一个背景几何体。
      ================================================ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function() {
   if (typeof THREE === 'undefined') return;
@@ -1078,6 +1097,15 @@
   showPoem(currentIdx);
   card.style.transition = 'opacity 0.35s ease, transform 0.35s ease, border-color 0.4s ease, box-shadow 0.4s ease';
 })();
+</script>
+
+<!-- Service Worker：离线访问 + 可安装到桌面（sw.js 已修复；仅在 https 下生效） -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('/sw.js').catch(function (e) { console.warn('[sw] 注册失败', e); });
+  });
+}
 </script>
 </body>
 </html>

@@ -2,8 +2,25 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>暮光短波电台 — twilit</title>
+<meta name="description" content="暮光短波电台：短波收音机模拟器，收听来自世界的神秘信号。">
+<link rel="canonical" href="https://twilit.site/radio.html">
+<meta name="theme-color" content="#080b10">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="twilit">
+<meta property="og:title" content="暮光短波电台 — twilit">
+<meta property="og:description" content="暮光短波电台：短波收音机模拟器，收听来自世界的神秘信号。">
+<meta property="og:url" content="https://twilit.site/radio.html">
+<meta property="og:image" content="https://twilit.site/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="暮光短波电台 — twilit">
+<meta name="twitter:description" content="暮光短波电台：短波收音机模拟器，收听来自世界的神秘信号。">
+<meta name="twitter:image" content="https://twilit.site/og.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Serif+SC:wght@300;400;600&display=swap');
 
@@ -576,7 +593,6 @@
   }
 
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 <div id="audio-hint">
@@ -1174,6 +1190,8 @@ document.addEventListener('touchstart', () => { if (!isAudioStarted) initAudio()
 })();
 
 </script>
+<!-- three.js：从 <head> 移到这里，不再阻塞首屏（脚本内有 typeof THREE 兜底） -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 
   /* -- Lo-Fi Ambient Audio -- */

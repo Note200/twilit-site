@@ -1,6 +1,6 @@
-#!/bin/bash
-# Cloudflare D1 Setup Migration
-# Run: npx wrangler d1 execute twilit_db --file=migrations/001_init.sql
+-- Cloudflare D1 初始化迁移
+-- 用法：npx wrangler d1 execute twilit_db --file=migrations/001_init.sql
+-- 注意：这里是纯 SQL，不要放 shell 语法（历史版本开头的 #!/bin/bash 会让 sqlite3 报 unrecognized token: "#"）
 
 CREATE TABLE IF NOT EXISTS guestbook (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

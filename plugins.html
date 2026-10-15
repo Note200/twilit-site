@@ -2,8 +2,25 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>插件画廊 — twilit</title>
+<meta name="description" content="twilit 的小玩具合集：电台、电子宠物、信号终端、诗社与壁纸廊。">
+<link rel="canonical" href="https://twilit.site/plugins.html">
+<meta name="theme-color" content="#080b10">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="twilit">
+<meta property="og:title" content="插件画廊 — twilit">
+<meta property="og:description" content="twilit 的小玩具合集：电台、电子宠物、信号终端、诗社与壁纸廊。">
+<meta property="og:url" content="https://twilit.site/plugins.html">
+<meta property="og:image" content="https://twilit.site/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="插件画廊 — twilit">
+<meta name="twitter:description" content="twilit 的小玩具合集：电台、电子宠物、信号终端、诗社与壁纸廊。">
+<meta name="twitter:image" content="https://twilit.site/og.png">
 <meta name="theme-color" content="#080b10">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
@@ -194,7 +211,8 @@ document.getElementById('tagCloud').addEventListener('click',e=>{
   document.getElementById('search').value='';query='';render();u();
 });
 
-if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+// 注册 Service Worker：失败时打日志，不要静默吞掉错误（曾经因为 sw.js 有语法错误而完全无声）
+if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(e=>console.warn('[sw] 注册失败',e)));
 </script>
 </body>
 </html>

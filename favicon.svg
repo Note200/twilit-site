@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="twilit">
+  <defs>
+    <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e8d5b0"/>
+      <stop offset="1" stop-color="#c9a96e"/>
+    </linearGradient>
+    <clipPath id="round"><rect width="64" height="64" rx="13"/></clipPath>
+  </defs>
+  <g clip-path="url(#round)">
+    <rect width="64" height="64" fill="#080b10"/>
+    <circle cx="32" cy="41" r="17" fill="url(#sun)"/>
+    <rect x="0" y="41" width="64" height="23" fill="#080b10"/>
+    <g stroke="#c9a96e" stroke-width="1.4" opacity="0.32">
+      <line x1="8" y1="46" x2="56" y2="46"/>
+      <line x1="12" y1="51" x2="52" y2="51"/>
+      <line x1="16" y1="56" x2="48" y2="56"/>
+    </g>
+  </g>
+</svg>
