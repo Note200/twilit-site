@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>收录档案 · 1999 — twilit</title>
+<meta name="description" content="收录档案 · 1999：把你的这次到访生成一张异常档案卡，可存成图片。">
+<link rel="canonical" href="https://twilit.site/dossier.html">
+<meta name="theme-color" content="#080b10">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="twilit">
+<meta property="og:title" content="收录档案 · 1999 — twilit">
+<meta property="og:description" content="收录档案 · 1999：把你的这次到访生成一张异常档案卡，可存成图片。">
+<meta property="og:url" content="https://twilit.site/dossier.html">
+<meta property="og:image" content="https://twilit.site/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="收录档案 · 1999 — twilit">
+<meta name="twitter:description" content="收录档案 · 1999：把你的这次到访生成一张异常档案卡，可存成图片。">
+<meta name="twitter:image" content="https://twilit.site/og.png">
+<!-- Web 字体用 <link> + preconnect 引入（比 @import 少一次往返，且提前建立连接） -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=Space+Mono&display=swap">
+<style>
+  :root{
+    --bg:#080b10; --amber:#c9a96e; --amber-dim:#7a6543; --amber-pale:#e8d5b0;
+    --text:#b8b4a8; --text-dim:#6b6760; --line:rgba(201,169,110,0.14);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--text); font-family:'Noto Serif SC',serif;
+    min-height:100vh; padding:28px 16px 48px; position:relative; overflow-x:hidden;
+  }
+  body::before{
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:100;
+    background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(201,169,110,0.03) 2px,rgba(201,169,110,0.03) 4px);
+  }
+  body::after{
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:99;
+    background:radial-gradient(ellipse at center,transparent 58%,rgba(8,11,16,0.72) 100%);
+  }
+  .wrap{max-width:560px; margin:0 auto; position:relative; z-index:1}
+  .topbar{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-family:'Space Mono',monospace; font-size:0.68rem; letter-spacing:0.12em;
+    color:var(--text-dim); margin-bottom:14px;
+  }
+  .topbar a{color:var(--amber-dim); text-decoration:none; border-bottom:1px solid transparent}
+  .topbar a:hover{color:var(--amber); border-color:var(--amber-dim)}
+  canvas{width:100%; height:auto; display:block; border:1px solid var(--line); background:#070a0f}
+  .actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; justify-content:center}
+  button{
+    background:#12151d; color:var(--text); border:1px solid var(--line); border-radius:6px;
+    padding:8px 14px; font-family:'Space Mono',monospace; font-size:0.72rem; letter-spacing:0.08em;
+    cursor:pointer;
+  }
+  button:hover{border-color:var(--amber-dim); color:var(--amber-pale)}
+  button.primary{background:#1d2a3a; border-color:#2f4a63; color:#cfe6f5}
+  button.primary:hover{background:#24384d}
+  .hint{
+    font-family:'Space Mono',monospace; font-size:0.62rem; color:var(--text-dim);
+    text-align:center; margin-top:12px; line-height:1.9; letter-spacing:0.05em;
+  }
+  #toast{
+    position:fixed; left:50%; bottom:26px; transform:translateX(-50%);
+    background:#20263a; border:1px solid var(--amber-dim); color:var(--amber-pale);
+    padding:9px 16px; border-radius:7px; font-family:'Space Mono',monospace;
+    font-size:0.7rem; display:none; max-width:86vw;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <span>twilit · 收录档案</span>
+    <a href="/">← 返回暮色</a>
+  </div>
+
+  <canvas id="card"></canvas>
+
+  <div class="actions">
+    <button class="primary" id="btnSave">保存为图片</button>
+    <button id="btnRefresh">重新收录</button>
+    <button id="btnReseed">重抽编号</button>
+    <button id="btnCopy">复制编号</button>
+  </div>
+  <div class="hint">
+    档案数据只来自这台设备（当前时间 · 停留时长 · 本机到访次数）<br>
+    不上传、不存储、没有服务器参与
+  </div>
+</div>
+<div id="toast"></div>
+
+<script src="_assets/dossier.js"></script>
+<script>
+(function () {
+  'use strict';
+  var D = window.Dossier;
+  var $ = function (id) { return document.getElementById(id); };
+  var cv = $('card'), ctx = cv.getContext('2d');
+
+  var W = 900, H = 1340, SCALE = 2;         // 逻辑尺寸 900×1340，导出按 2 倍（1800×2680）
+  var C = {
+    bgTop: '#0d1017', bgBot: '#070a0f',
+    amber: '#c9a96e', dim: '#7a6543', pale: '#e8d5b0',
+    text: '#b8b4a8', faint: '#6b6760',
+    line: 'rgba(201,169,110,0.18)', lineSoft: 'rgba(201,169,110,0.09)'
+  };
+  var MONO = '"Space Mono", Consolas, monospace';
+  var SERIF = '"Noto Serif SC", serif';
+
+  var startTime = Date.now();
+  var dossier = null;
+
+  /* ---------------- localStorage（本机到访次数 + 档案种子） ---------------- */
+  function store(key, val) {
+    try {
+      if (val === undefined) return localStorage.getItem(key);
+      localStorage.setItem(key, String(val));
+    } catch (e) { /* 隐私模式下忽略 */ }
+    return null;
+  }
+  function visitCount() {
+    var n = parseInt(store('twilit_dossier_visits') || '0', 10);
+    if (!isFinite(n) || n < 0) n = 0;
+    n += 1;
+    store('twilit_dossier_visits', n);
+    return n;
+  }
+  function seed() {
+    var s = parseInt(store('twilit_dossier_seed') || '0', 10);
+    if (!s) { s = Date.now(); store('twilit_dossier_seed', s); }
+    return s;
+  }
+
+  /* ---------------- 画布小工具 ---------------- */
+  function tracked(text, x, y, tracking) {
+    var cx = x;
+    for (var i = 0; i < text.length; i++) {
+      ctx.fillText(text[i], cx, y);
+      cx += ctx.measureText(text[i]).width + tracking;
+    }
+    return cx - tracking - x;
+  }
+  function trackedWidth(text, tracking) {
+    var w = 0;
+    for (var i = 0; i < text.length; i++) w += ctx.measureText(text[i]).width + tracking;
+    return w - tracking;
+  }
+  function trackedRight(text, right, y, tracking) {
+    tracked(text, right - trackedWidth(text, tracking), y, tracking);
+  }
+  function wrap(text, maxWidth) {
+    var lines = [], line = '';
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      if (ctx.measureText(line + ch).width > maxWidth && line) { lines.push(line); line = ch; }
+      else line += ch;
+    }
+    if (line) lines.push(line);
+    return lines;
+  }
+  function mono(size, weight) { ctx.font = (weight || 400) + ' ' + size + 'px ' + MONO; }
+  function serif(size, weight) { ctx.font = (weight || 300) + ' ' + size + 'px ' + SERIF; }
+
+  /* ---------------- 绘制整张档案 ---------------- */
+  function draw(d) {
+    cv.width = W * SCALE; cv.height = H * SCALE;
+    ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+
+    // 底：竖向渐变 + 扫描线 + 暗角
+    var g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, C.bgTop); g.addColorStop(1, C.bgBot);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = 'rgba(201,169,110,0.028)';
+    for (var y = 0; y < H; y += 4) ctx.fillRect(0, y, W, 1);
+    var vg = ctx.createRadialGradient(W / 2, H * 0.42, H * 0.18, W / 2, H * 0.5, H * 0.78);
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.55)');
+    ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+
+    // 双线外框 + 四角刻度
+    ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+    ctx.strokeRect(28.5, 28.5, W - 57, H - 57);
+    ctx.strokeStyle = C.lineSoft;
+    ctx.strokeRect(36.5, 36.5, W - 73, H - 73);
+    ctx.strokeStyle = C.dim; ctx.lineWidth = 2;
+    [[28, 28, 1, 1], [W - 28, 28, -1, 1], [28, H - 28, 1, -1], [W - 28, H - 28, -1, -1]].forEach(function (c) {
+      ctx.beginPath();
+      ctx.moveTo(c[0], c[1] + 26 * c[3]); ctx.lineTo(c[0], c[1]); ctx.lineTo(c[0] + 26 * c[2], c[1]);
+      ctx.stroke();
+    });
+
+    var L = 64, R = W - 64;
+
+    // 页眉
+    mono(19); ctx.fillStyle = C.amber;
+    tracked('twilit', L, 88, 6);
+    mono(13); ctx.fillStyle = C.faint;
+    trackedRight('1999 收录档案 / ARCHIVE', R, 88, 3);
+    ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(L, 112.5); ctx.lineTo(R, 112.5); ctx.stroke();
+
+    // 编号
+    mono(13); ctx.fillStyle = C.dim;
+    tracked('NO.', L, 168, 3);
+    mono(40); ctx.fillStyle = C.pale;
+    tracked(d.number, L, 214, 5);
+
+    // 标题
+    serif(46, 300); ctx.fillStyle = C.amber;
+    tracked('异常个体档案', L, 282, 6);
+    mono(13); ctx.fillStyle = C.faint;
+    tracked('ANOMALY RECORD · 由本站自动生成', L, 312, 3);
+
+    // 时代章（旋转方章）
+    ctx.save();
+    ctx.translate(R - 96, 216); ctx.rotate(-6 * Math.PI / 180);
+    ctx.globalAlpha = 0.9;
+    ctx.strokeStyle = C.dim; ctx.lineWidth = 2;
+    ctx.strokeRect(-88, -62, 176, 124);
+    ctx.strokeStyle = C.lineSoft; ctx.lineWidth = 1;
+    ctx.strokeRect(-80, -54, 160, 108);
+    ctx.textAlign = 'left';
+    serif(30, 400); ctx.fillStyle = C.amber;
+    tracked(d.era.label, -trackedWidth(d.era.label, 8) / 2, 8, 8);
+    mono(11); ctx.fillStyle = C.dim;
+    tracked('ERA', -trackedWidth('ERA', 3) / 2, -30, 3);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+
+    // 字段表
+    var y0 = 392, rowH = 52;
+    for (var i = 0; i < d.rows.length; i++) {
+      var y = y0 + i * rowH;
+      mono(16); ctx.fillStyle = C.faint;
+      var lw = tracked(d.rows[i][0], L, y, 3);
+      serif(20, 300); ctx.fillStyle = C.text;
+      var vw = ctx.measureText(d.rows[i][1]).width;
+      ctx.fillText(d.rows[i][1], R - vw, y);
+      // 点线引导
+      ctx.strokeStyle = C.lineSoft; ctx.lineWidth = 1;
+      ctx.setLineDash([2, 5]);
+      ctx.beginPath();
+      ctx.moveTo(L + lw + 12, y - 5);
+      ctx.lineTo(R - vw - 12, y - 5);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // 异常等级条
+    var ly = y0 + d.rows.length * rowH + 18;
+    ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+    ctx.strokeRect(L + 0.5, ly - 30.5, R - L - 1, 78);
+    mono(13); ctx.fillStyle = C.faint;
+    tracked('异常等级', L + 18, ly - 8, 3);
+    serif(30, 400); ctx.fillStyle = C.amber;
+    tracked(d.level.label, L + 18, ly + 32, 5);
+    // 分数条
+    var bx = L + 240, bw = R - bx - 18;
+    ctx.fillStyle = 'rgba(201,169,110,0.10)';
+    ctx.fillRect(bx, ly + 14, bw, 8);
+    ctx.fillStyle = C.amber;
+    ctx.fillRect(bx, ly + 14, bw * (d.level.score / 100), 8);
+    mono(12); ctx.fillStyle = C.faint;
+    trackedRight(d.level.score + ' / 100', R - 18, ly + 40, 2);
+
+    // 评语框
+    var cy = ly + 82;
+    var lines = wrap(d.comment, R - L - 56);
+    var boxH = 34 + lines.length * 36;
+    ctx.fillStyle = 'rgba(201,169,110,0.035)';
+    ctx.fillRect(L, cy, R - L, boxH);
+    ctx.fillStyle = C.dim;
+    ctx.fillRect(L, cy, 3, boxH);
+    ctx.strokeStyle = C.lineSoft; ctx.lineWidth = 1;
+    ctx.strokeRect(L + 0.5, cy + 0.5, R - L - 1, boxH - 1);
+    serif(20, 300); ctx.fillStyle = C.pale;
+    lines.forEach(function (ln, idx) { ctx.fillText(ln, L + 28, cy + 44 + idx * 36); });
+
+    // 批注区（留白等着被写——档案表都该有这一栏）
+    var ny = cy + boxH + 36;
+    mono(13); ctx.fillStyle = C.faint;
+    tracked('批注 / NOTES', L, ny, 3);
+    ctx.strokeStyle = C.lineSoft; ctx.lineWidth = 1;
+    for (var k = 0; k < 3; k++) {
+      var ly2 = ny + 30 + k * 27;
+      ctx.beginPath(); ctx.moveTo(L, ly2 + 0.5); ctx.lineTo(R, ly2 + 0.5); ctx.stroke();
+    }
+    mono(11); ctx.fillStyle = 'rgba(107,103,96,0.8)';
+    trackedRight('（观测者未留下笔迹）', R, ny + 30 + 3 * 27 + 4, 2);
+
+    // 底部波形（由编号决定，稳定不闪）
+    var wy = H - 168, amp = 34;
+    var h = D.hash32(parseInt(d.number.replace(/\D/g, ''), 10) || 1);
+    ctx.strokeStyle = 'rgba(201,169,110,0.42)'; ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    for (var x = 0; x <= 180; x++) {
+      h = D.hash32(h + x);
+      var val = (h % 1000) / 1000;
+      var px = L + (R - L) * (x / 180);
+      var py = wy - (val * 2 - 1) * amp - Math.sin(x / 7) * 6;
+      if (x === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    mono(11); ctx.fillStyle = C.faint;
+    tracked('SIGNAL TRACE · ' + d.phase.label, L, wy + 40, 3);
+
+    // 页脚
+    ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(L, H - 76.5); ctx.lineTo(R, H - 76.5); ctx.stroke();
+    mono(15); ctx.fillStyle = C.dim;
+    tracked('twilit.site', L, H - 44, 4);
+    mono(11); ctx.fillStyle = C.faint;
+    trackedRight('本档案仅存于你的浏览器 · 未上传任何数据', R, H - 44, 2);
+  }
+
+  /* ---------------- 交互 ---------------- */
+  var toastTimer = null;
+  function toast(msg) {
+    var el = $('toast');
+    el.textContent = msg; el.style.display = 'block';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.style.display = 'none'; }, 2600);
+  }
+  function regenerate() {
+    dossier = D.collect({ now: new Date(), startTime: startTime, visits: visits, seed: seed() });
+    draw(dossier);
+  }
+  var visits = 0;
+
+  function bind() {
+    $('btnSave').onclick = function () {
+      cv.toBlob(function (blob) {
+        if (!blob) { toast('导出失败，试试右键图片另存'); return; }
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'twilit-dossier-' + dossier.number.replace(/^TWILIT-1999-/, '') + '.png';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+        toast('已导出 ' + cv.width + '×' + cv.height + ' 图片');
+      }, 'image/png');
+    };
+    $('btnRefresh').onclick = function () { regenerate(); toast('已按当前时长重新收录'); };
+    $('btnReseed').onclick = function () {
+      store('twilit_dossier_seed', Date.now());
+      regenerate(); toast('编号已重抽：' + dossier.number);
+    };
+    $('btnCopy').onclick = function () {
+      var text = dossier.number;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { toast('编号已复制'); },
+          function () { toast(text); });
+      } else toast(text);
+    };
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 's' || e.key === 'S') $('btnSave').click();
+    });
+  }
+
+  visits = visitCount();
+  regenerate();
+  bind();
+  // 等 Web 字体就绪后重画一次，避免首次用后备字体导出
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () { regenerate(); });
+  }
+})();
+</script>
+</body>
+</html>
